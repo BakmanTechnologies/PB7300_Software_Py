@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import serial
 import serial.tools.list_ports as ports
 import time
@@ -8,6 +7,7 @@ from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
 class SerialCommands:
     """Class containing serial port commands"""
+
     PB7200COMPort = serial.Serial()
     TEMPERATURE_M = 427.36
     TEMPERATURE_B = 35.13
@@ -377,7 +377,7 @@ class SerialCommands:
 
         hex_list = []
         hex_list.append("AA")
-        hex_list.append("20")
+        hex_list.append("21")
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append("00")
@@ -584,7 +584,7 @@ class SerialCommands:
 
         hex_list = []
         hex_list.append("AA")
-        hex_list.append("80")
+        hex_list.append("81")
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append(current_msb)

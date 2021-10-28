@@ -1,4 +1,4 @@
-from serial_commands import SerialCommands
+from serial_commands_PB7200 import SerialCommands
 from serial_data_manipulation import SerialDataManipulation
 
 
