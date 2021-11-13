@@ -2,6 +2,7 @@ from abc import abstractmethod
 import serial
 import serial.tools.list_ports as ports
 import time
+import sys
 from collections import namedtuple
 from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 
@@ -31,12 +32,13 @@ class SerialCommands:
 
         """Opens serial port with set properties"""
         self.PB7200COMPort.port = com_select
-        self.PB7200COMPort.baudrate = 56000
+        self.PB7200COMPort.baudrate = 115200
         self.PB7200COMPort.parity = PARITY_NONE
         self.PB7200COMPort.bytesize = EIGHTBITS
         self.PB7200COMPort.stopbits = STOPBITS_ONE
         self.PB7200COMPort.rtscts = True
-        self.PB7200COMPort.write_timeout = 5
+        self.PB7200COMPort.write_timeout = 10
+
         try:
             self.PB7200COMPort.open()
             print("Succeded in opening PB7200 port")
@@ -62,13 +64,14 @@ class SerialCommands:
         """Function recieves tx_bytes list to send, returns rxBytes bytearray"""
         print("Writing to PB7200")
         self.PB7200COMPort.reset_input_buffer()
-        # rxBytes = []
-        # send the character to the device
+
+        # send the characterS to the device
         self.PB7200COMPort.write(tx_bytes)
+
+        time.sleep(0.01)
 
         # let's wait one second before reading output (let's give device time to answer)
         print("Awaiting response")
-        time.sleep(1)
 
         print("Bytes in buffer to read: ")
         print(self.PB7200COMPort.in_waiting)
@@ -78,8 +81,11 @@ class SerialCommands:
             rx_bytes = self.PB7200COMPort.read(10)
 
             print(rx_bytes)
-
-        return rx_bytes
+        try:
+            return rx_bytes
+        except UnboundLocalError as ex:
+            print(ex)
+            sys.exit()
 
     def close_port(self):
         """Closes com port at end of program"""
@@ -292,7 +298,7 @@ class SerialCommands:
 
         temp_2_lsb_hex = split_hex_list[7]
 
-        # laser 1
+        # laser 2
 
         temp_2_msb_decimal = self.convert_hex_to_dec_values(temp_2_msb_hex)
 
@@ -636,7 +642,7 @@ class SerialCommands:
             'lock_in_3rd_msb_hex', 'lock_in_lsb_hex'])
 
         lockin_values = lockin_values(split_hex_list[2], split_hex_list[3],
-                                      split_hex_list[4], int(split_hex_list[5]))
+                                      split_hex_list[4], split_hex_list[5])
 
         temp_values = namedtuple('temp_values', [
             'temp_1_msb_hex', 'temp_1_lsb_hex', 'temp_2_msb_hex', 'temp_2_lsb_hex'])
@@ -882,7 +888,115 @@ class SerialCommands:
 
     # Laser Bias Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    def laser_bias_enable(self):
+        """Enables the laser bias"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("B0")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        self.write_serial(tx_bytes)
+
+        print("Laser bias enabled")
+
+    def laser_bias_disable(self):
+        """Disables the laser bias"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("B1")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        self.write_serial(tx_bytes)
+
+        print("Laser bias disabled")
+
     # Component values read ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def read_heatsink_temp(self):
+        """Reads heatsink temperature value"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C0")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        heatsink_temps_bytes = self.write_serial(tx_bytes)
+
+        split_hex_list = self.convert_hex_and_split_bytes(
+            heatsink_temps_bytes)
+
+        temp_heatsink_msb_hex = split_hex_list[8]
+
+        temp_heatsink_lsb_hex = split_hex_list[9]
+
+        temp_heatsink_msb_decimal = self.convert_hex_to_dec_values(
+            temp_heatsink_msb_hex)
+
+        temp_heatsink_msb_decimal_float = float(temp_heatsink_msb_decimal)
+
+        temp_heatsink_lsb_decimal = self.convert_hex_to_dec_values(
+            temp_heatsink_lsb_hex)
+
+        temp_heatsink_lsb_decimal_float = float(temp_heatsink_lsb_decimal)
+
+        temp_heatsink_full_decimal_unscaled = (
+            (((((2**8) * temp_heatsink_msb_decimal_float)+temp_heatsink_lsb_decimal_float)/427.36)) - 35.13)
+
+        print(f"Board heatsink temp: {temp_heatsink_full_decimal_unscaled}")
+
+    def read_dsp_temp(self):
+        """Reads dsp temperature value"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C2")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        dsp_temps_bytes = self.write_serial(tx_bytes)
+
+        split_hex_list = self.convert_hex_and_split_bytes(
+            dsp_temps_bytes)
+
+        temp_dsp_msb_hex = split_hex_list[8]
+
+        temp_dsp_lsb_hex = split_hex_list[9]
+
+        temp_dsp_msb_decimal = self.convert_hex_to_dec_values(
+            temp_dsp_msb_hex)
+
+        temp_dsp_msb_decimal_float = float(temp_dsp_msb_decimal)
+
+        temp_dsp_lsb_decimal = self.convert_hex_to_dec_values(
+            temp_dsp_lsb_hex)
+
+        temp_dsp_lsb_decimal_float = float(temp_dsp_lsb_decimal)
+
+        temp_dsp_full_decimal_unscaled = (
+            (((((2**8) * temp_dsp_msb_decimal_float)+temp_dsp_lsb_decimal_float)/427.36)) - 35.13)
+
+        print(f"Board dsp temp: {temp_dsp_full_decimal_unscaled}")
 
     # Fan Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -948,6 +1062,40 @@ class SerialCommands:
 
     # LED control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    def LED_enable(self):
+        """Enables the LED"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C5")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("01")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        LED_enable_command = self.write_serial(tx_bytes)
+
+        print(LED_enable_command)
+
+    def LED_disable(self):
+        """Enables the LED"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C5")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        LED_disable_command = self.write_serial(tx_bytes)
+
+        print(LED_disable_command)
+
     # Read Firmware Version ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def read_version(self):
@@ -962,6 +1110,8 @@ class SerialCommands:
         hex_list.append("00")
 
         tx_bytes = self.build_tx_bytes(hex_list)
+
+        print(tx_bytes)
 
         version_bytes = self.write_serial(tx_bytes)
 
@@ -1026,6 +1176,113 @@ class SerialCommands:
         print(f"Lockin enable set to: {lockin_disable_dec}")
 
     # Sleep timer control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def start_sleep_timer_countdown(self, hours_delay, minutes_delay, seconds_delay):
+        """Sets sleep timer countdown delay in hours, minutes and seconds"""
+
+        hours_delay_hex = hex(hours_delay)
+
+        minutes_delay_hex = hex(minutes_delay)
+
+        seconds_delay_hex = hex(seconds_delay)
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C8")
+        hex_list.append("00")
+        hex_list.append(hours_delay_hex)
+        hex_list.append(minutes_delay_hex)
+        hex_list.append(seconds_delay_hex)
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        echo_delay = self.write_serial(tx_bytes)
+
+        split_hex_list = self.convert_hex_and_split_bytes(echo_delay)
+
+        echo_hours_delay_hex = split_hex_list[7]
+
+        echo_minutes_msb_hex = split_hex_list[8]
+
+        echo_seconds_lsb_hex = split_hex_list[9]
+
+        echo_delay_string = f"Time delay set to: {echo_hours_delay_hex} Hours, {echo_minutes_msb_hex} Minutes, {echo_seconds_lsb_hex}"
+
+        print(
+            f"Time delay set to: {echo_hours_delay_hex} Hours, {echo_minutes_msb_hex} Minutes, {echo_seconds_lsb_hex}")
+
+        return echo_delay_string
+
+    def stop_sleep_timer_countdown(self):
+        """Stops sleep timer from running"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C9")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        self.write_serial(tx_bytes)
+    # Read Laser Currents ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def read_laser_currents(self):
+        """Reads LD0, LD1 Bias Current"""
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("CC")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        lockin_and_temps_bytes = self.write_serial(tx_bytes)
+
+        split_hex_list = self.convert_hex_and_split_bytes(
+            lockin_and_temps_bytes)
+
+        temp_1_msb_hex = split_hex_list[6]
+
+        temp_1_lsb_hex = split_hex_list[7]
+
+        temp_2_msb_hex = split_hex_list[8]
+
+        temp_2_lsb_hex = split_hex_list[9]
+
+        # laser 1
+
+        temp_1_msb_decimal = self.convert_hex_to_dec_values(temp_1_msb_hex)
+
+        temp_1_msb_decimal_float = float(temp_1_msb_decimal)
+
+        temp_1_lsb_decimal = self.convert_hex_to_dec_values(temp_1_lsb_hex)
+
+        temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
+
+        temp_1_full_decimal_unscaled = (
+            (((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/80)
+
+        # laser 2
+
+        temp_2_msb_decimal = self.convert_hex_to_dec_values(temp_2_msb_hex)
+
+        temp_2_msb_decimal_float = float(temp_2_msb_decimal)
+
+        temp_2_lsb_decimal = self.convert_hex_to_dec_values(temp_2_lsb_hex)
+
+        temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
+
+        temp_2_full_decimal_unscaled = (
+            (((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/80)
+
+        print(f"Laser 1 Bias Current: {temp_1_full_decimal_unscaled}")
+        print(f"Laser 2 Bias Current: {temp_2_full_decimal_unscaled}")
 
     # Lock in time constant ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
