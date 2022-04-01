@@ -6,12 +6,14 @@ import time
 def main():
     """Main function"""
     serial_commands_class = SerialCommands()
-    serial_commands_class.laser_bias_disable()
+    numlist = []
+    word = ""
+    for i in range(200):
+        numlist.append(serial_commands_class.test_eeprom(i))
+        word += numlist[i]
+    print("List of values", numlist)
+    print(word)
     serial_commands_class.close_port()
-    # list = serial_commands_class.get_data()
-    # serial_data_manipulation = SerialDataManipulation(list)
-    # testing = serial_data_manipulation.get_list_values()
-    # print(testing)
 
 
 if __name__ == "__main__":

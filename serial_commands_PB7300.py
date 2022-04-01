@@ -1,8 +1,10 @@
+from ast import Break
 import serial
 import serial.tools.list_ports as ports
 import time
 from collections import namedtuple
 from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
+import math
 
 
 class SerialCommands:
@@ -30,7 +32,7 @@ class SerialCommands:
 
         """Opens serial port with set properties"""
         self.PB7200COMPort.port = com_select
-        self.PB7200COMPort.baudrate = 56000
+        self.PB7200COMPort.baudrate = 115200
         self.PB7200COMPort.parity = PARITY_NONE
         self.PB7200COMPort.bytesize = EIGHTBITS
         self.PB7200COMPort.stopbits = STOPBITS_ONE
@@ -793,6 +795,77 @@ class SerialCommands:
         lockin_disable_dec = self.convert_hex_to_dec_values(lockin_disable_hex)
 
         print(f"Lockin enable set to: {lockin_disable_dec}")
+
+    def read_EEPROM(self, address):
+
+        split_address = float(math.floor(address/256))
+        modded_address = float(address % 256)
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("0A")
+        hex_list.append("00")
+        hex_list.append(split_address)
+        hex_list.append(modded_address)
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        eeprom_data = self.write_serial(tx_bytes)
+
+        eeprom_data_hex = eeprom_data.hex()
+
+        eeprom_data_dec = self.convert_hex_to_dec_values(eeprom_data_hex)
+
+        return eeprom_data_dec
+
+    def write_EEPROM(self, address, value):
+
+        split_address = float(math.floor(address/256))
+        modded_address = float(address % 256)
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("09")
+        hex_list.append("4C")
+        hex_list.append(split_address)
+        hex_list.append(modded_address)
+        hex_list.append(value)
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        self.write_serial(tx_bytes)
+
+        print("Wrote to the EEPROM")
+
+    def find_start_file_eeprom(self, file_number, found_address):
+        current_file_address = 0
+        last_eeprom_used = 0
+        foundEnd = False
+        foundFile = False
+        filecount = 0
+
+        while foundEnd == False:
+            current_num = self.read_EEPROM(current_file_address)
+            if filecount == file_number:
+                foundFile = True
+                found_address = last_eeprom_used
+                break
+            if current_num != filecount + 1:
+                foundEnd = True
+            else:
+                last_eeprom_used += self.read_EEPROM(
+                    current_file_address + 1)*256
+                last_eeprom_used += self.read_EEPROM(
+                    current_file_address + 2) + 3
+                current_file_address = last_eeprom_used
+                filecount += 1
+
+        return foundFile
+
+    def read_SHA1(self):
+        # nope
+        defd = 0
 
     def dwell(self):
         """Runs the dwell operation mode in the future"""

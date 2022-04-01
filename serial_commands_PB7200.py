@@ -1,10 +1,12 @@
-from abc import abstractmethod
+
+from distutils.log import error
 import serial
 import serial.tools.list_ports as ports
 import time
 import sys
 from collections import namedtuple
 from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
+import math
 
 
 class SerialCommands:
@@ -22,17 +24,17 @@ class SerialCommands:
         for p in PORTS:
             print(p)
         print("PB7200 Python Command Module v0.01")
-        com_select = input("Specify COM port selection: ")
+        #com_select = input("Specify COM port selection: ")
 
-        print("Select a command to send to the PB7200 from the list:")
-        print("1: Read Firmware version")
-        print("2: Read lock-in 1st harmonic output")
-        print("3: Read lock-in and LD0, LD1 temps")
-        command_select = input("Selection: ")
+        #print("Select a command to send to the PB7200 from the list:")
+        #print("1: Read Firmware version")
+        #print("2: Read lock-in 1st harmonic output")
+        #print("3: Read lock-in and LD0, LD1 temps")
+        #command_select = input("Selection: ")
 
-        """Opens serial port with set properties"""
-        self.PB7200COMPort.port = com_select
-        self.PB7200COMPort.baudrate = 115200
+        # Opens serial port with set properties
+        self.PB7200COMPort.port = "COM9"
+        self.PB7200COMPort.baudrate = 56000
         self.PB7200COMPort.parity = PARITY_NONE
         self.PB7200COMPort.bytesize = EIGHTBITS
         self.PB7200COMPort.stopbits = STOPBITS_ONE
@@ -84,8 +86,9 @@ class SerialCommands:
         try:
             return rx_bytes
         except UnboundLocalError as ex:
-            print(ex)
-            sys.exit()
+            print("No values to read")
+            rx_bytes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            # sys.exit()
 
     def close_port(self):
         """Closes com port at end of program"""
@@ -1359,3 +1362,135 @@ class SerialCommands:
         self.set_LD0_Temperature()
         self.set_LD1_Temperature()
         self.fan_on_high()
+
+    def basic_scan(self):
+        self.set_LD0_Power()
+
+    def read_EEPROM(self, address):
+
+        split_address = float(math.floor(address/256))
+        modded_address = float(address % 256)
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("0A")
+        hex_list.append("00")
+        hex_list.append(split_address)
+        hex_list.append(modded_address)
+        hex_list.append("00")
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        eeprom_data = self.write_serial(tx_bytes)
+
+        eeprom_data_hex = eeprom_data.hex()
+
+        eeprom_data_dec = self.convert_hex_to_dec_values(eeprom_data_hex)
+
+        return eeprom_data_dec
+
+    def write_EEPROM(self, address, value):
+
+        split_address = float(math.floor(address/256))
+        modded_address = float(address % 256)
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("09")
+        hex_list.append("4C")
+        hex_list.append(split_address)
+        hex_list.append(modded_address)
+        hex_list.append(value)
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        self.write_serial(tx_bytes)
+
+        print("Wrote to the EEPROM")
+
+    def find_start_file_eeprom(self, file_number, found_address):
+        current_file_address = 0
+        last_eeprom_used = 0
+        foundEnd = False
+        foundFile = False
+        filecount = 0
+
+        while foundEnd == False:
+            current_num = self.read_EEPROM(current_file_address)
+            if filecount == file_number:
+                foundFile = True
+                found_address = last_eeprom_used
+                break
+            if current_num != filecount + 1:
+                foundEnd = True
+            else:
+                last_eeprom_used += self.read_EEPROM(
+                    current_file_address + 1)*256
+                last_eeprom_used += self.read_EEPROM(
+                    current_file_address + 2) + 3
+                current_file_address = last_eeprom_used
+                filecount += 1
+
+        return foundFile
+
+    def read_SHA1(self):
+        # nope
+        defd = 0
+
+    def dwell(self):
+        """Runs the dwell operation mode in the future"""
+        self.set_LD0_Temperature()
+        self.set_LD1_Temperature()
+        self.fan_on_high()
+
+    def test_eeprom(self, address):
+        split_address = (math.floor(address/256))
+
+        print(hex(split_address))
+
+        modded_address = (address % 256)
+
+        print(hex(modded_address))
+
+        print(hex(split_address).split("x"))
+        print(hex(modded_address).split("x"))
+
+        split1 = f'0{str.upper(hex(split_address).split("x")[1])}' if len(hex(
+            split_address).split("x")[1]) == 1 else f'{str.upper(hex(split_address).split("x")[1])}'
+        split2 = f'0{str.upper(hex(modded_address).split("x")[1])}' if len(hex(
+            modded_address).split("x")[1]) == 1 else f'{str.upper(hex(modded_address).split("x")[1])}'
+
+        print("split1", split1)
+        print("split2", split2)
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("0A")
+        hex_list.append("00")
+        hex_list.append(split1)
+        hex_list.append(split2)
+        hex_list.append("00")
+
+        print(hex_list)
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        eeprom_data = self.write_serial(tx_bytes)
+
+        #value = int(str(eeprom_data[9]), 16)
+
+        #eeprom_data = self.write_serial(tx_byte_array)
+
+        try:
+            print(eeprom_data[9])
+        except TypeError as e:
+            print(e)
+            eeprom_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        time.sleep(0.02)
+
+        char = chr(eeprom_data[9])
+
+        return char
+
+        # return eeprom_data

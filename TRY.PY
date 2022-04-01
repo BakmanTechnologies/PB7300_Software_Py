@@ -1,30 +1,53 @@
+import math
 
 
-temperature_m = 427.36
-temperature_b = 35.13
+def test_eeprom():
+    address = 10
 
-TEST_TEMP = 25
+    split_address = (math.floor(address/256))
 
-temp_scaled = int((TEST_TEMP + temperature_b)*temperature_m)
+    print(hex(split_address))
 
-temp_hex = hex(temp_scaled)
+    modded_address = (address % 256)
 
-n = 2
+    print(hex(modded_address))
 
-split_hex = [temp_hex[i:i+n]
-             for i in range(0, len(temp_hex), n)]
+    print(hex(split_address).split("x"))
+    print(hex(modded_address).split("x"))
 
-temp_msb = str(split_hex[1])
+    split1 = f'0{str.capitalize(hex(split_address).split("x")[1])}' if len(hex(split_address).split("x")[1]) == 1 else f'{str.capitalize(hex(split_address).split("x")[1])}'
+    split2 = f'0{str.capitalize(hex(modded_address).split("x")[1])}' if len(hex(modded_address).split("x")[1]) == 1 else f'{str.capitalize(hex(modded_address).split("x")[1])}'
 
-temp_lsb = str(split_hex[2])
+    print("split1",split1)
+    print("split2",split2)
 
-hex_list = []
-hex_list.append("AA")
-hex_list.append("10")
-hex_list.append(temp_msb)
-hex_list.append(temp_lsb)
-hex_list.append("00")
-hex_list.append("00")
+    hex_list = []
+    hex_list.append("AA")
+    hex_list.append("0A")
+    hex_list.append("00")
+    hex_list.append(split1)
+    hex_list.append(split2)
+    hex_list.append("00")
 
+    print(hex_list)
 
-print(hex_list)
+    sync_byte = hex_list[0]
+    command_byte = hex_list[1]
+    third_byte = hex_list[2]
+    fourth_byte = hex_list[3]
+    fifth_byte = hex_list[4]
+    sixth_byte = hex_list[5]
+
+    tx_bytes_hex = f"{sync_byte} {command_byte} {third_byte} {fourth_byte} {fifth_byte} {sixth_byte}"
+
+    print(tx_bytes_hex)
+
+    tx_byte_array = bytearray.fromhex(tx_bytes_hex)
+
+    #eeprom_data = self.write_serial(tx_byte_array)
+
+    print(tx_byte_array)
+
+    # return eeprom_data
+
+test_eeprom()
