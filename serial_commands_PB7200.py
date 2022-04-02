@@ -1,4 +1,4 @@
-
+import hashlib
 from distutils.log import error
 import serial
 import serial.tools.list_ports as ports
@@ -24,13 +24,13 @@ class SerialCommands:
         for p in PORTS:
             print(p)
         print("PB7200 Python Command Module v0.01")
-        #com_select = input("Specify COM port selection: ")
+        # com_select = input("Specify COM port selection: ")
 
-        #print("Select a command to send to the PB7200 from the list:")
-        #print("1: Read Firmware version")
-        #print("2: Read lock-in 1st harmonic output")
-        #print("3: Read lock-in and LD0, LD1 temps")
-        #command_select = input("Selection: ")
+        # print("Select a command to send to the PB7200 from the list:")
+        # print("1: Read Firmware version")
+        # print("2: Read lock-in 1st harmonic output")
+        # print("3: Read lock-in and LD0, LD1 temps")
+        # command_select = input("Selection: ")
 
         # Opens serial port with set properties
         self.PB7200COMPort.port = "COM9"
@@ -1443,25 +1443,26 @@ class SerialCommands:
         self.set_LD1_Temperature()
         self.fan_on_high()
 
-    def test_eeprom(self, address):
+    def read_eeprom(self, address):
+        """Reads the eemprom 1 memory address at a time and returns a char"""
         split_address = (math.floor(address/256))
 
-        print(hex(split_address))
+        # print(hex(split_address))
 
         modded_address = (address % 256)
 
-        print(hex(modded_address))
+        # print(hex(modded_address))
 
-        print(hex(split_address).split("x"))
-        print(hex(modded_address).split("x"))
+        # print(hex(split_address).split("x"))
+        # print(hex(modded_address).split("x"))
 
         split1 = f'0{str.upper(hex(split_address).split("x")[1])}' if len(hex(
             split_address).split("x")[1]) == 1 else f'{str.upper(hex(split_address).split("x")[1])}'
         split2 = f'0{str.upper(hex(modded_address).split("x")[1])}' if len(hex(
             modded_address).split("x")[1]) == 1 else f'{str.upper(hex(modded_address).split("x")[1])}'
 
-        print("split1", split1)
-        print("split2", split2)
+        # print("split1", split1)
+        # print("split2", split2)
 
         hex_list = []
         hex_list.append("AA")
@@ -1471,26 +1472,22 @@ class SerialCommands:
         hex_list.append(split2)
         hex_list.append("00")
 
-        print(hex_list)
-
         tx_bytes = self.build_tx_bytes(hex_list)
 
         eeprom_data = self.write_serial(tx_bytes)
 
-        #value = int(str(eeprom_data[9]), 16)
-
-        #eeprom_data = self.write_serial(tx_byte_array)
-
         try:
-            print(eeprom_data[9])
+            char = chr(eeprom_data[9])
         except TypeError as e:
             print(e)
-            eeprom_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-        time.sleep(0.02)
-
-        char = chr(eeprom_data[9])
+            char = self.check_data(address)
 
         return char
 
+    def check_data(self, address):
+        value = self.read_eeprom(address)
+        return value
         # return eeprom_data
+
+    def generate_sha1(self):
+        duh = 0
