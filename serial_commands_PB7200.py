@@ -1,4 +1,4 @@
-import hashlib
+
 from distutils.log import error
 import serial
 import serial.tools.list_ports as ports
@@ -1451,18 +1451,12 @@ class SerialCommands:
 
         modded_address = (address % 256)
 
-        # print(hex(modded_address))
-
-        # print(hex(split_address).split("x"))
-        # print(hex(modded_address).split("x"))
-
+        # Separates address lsb msb, turns them into hex, capitalizes the chars, checks if theres only 1 char adds
+        # a 0 in front to conform to byte format
         split1 = f'0{str.upper(hex(split_address).split("x")[1])}' if len(hex(
             split_address).split("x")[1]) == 1 else f'{str.upper(hex(split_address).split("x")[1])}'
         split2 = f'0{str.upper(hex(modded_address).split("x")[1])}' if len(hex(
             modded_address).split("x")[1]) == 1 else f'{str.upper(hex(modded_address).split("x")[1])}'
-
-        # print("split1", split1)
-        # print("split2", split2)
 
         hex_list = []
         hex_list.append("AA")
@@ -1476,6 +1470,7 @@ class SerialCommands:
 
         eeprom_data = self.write_serial(tx_bytes)
 
+        # checks for integrity of byte array if not a list, rechecks the memory address until valid
         try:
             char = chr(eeprom_data[9])
         except TypeError as e:
