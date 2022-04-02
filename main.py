@@ -6,13 +6,8 @@ import time
 def main():
     """Main function"""
     serial_commands_class = SerialCommands()
-    numlist = []
-    word = ""
-    for i in range(200):
-        numlist.append(serial_commands_class.test_eeprom(i))
-        word += numlist[i]
-    print("List of values", numlist)
-    print(word)
+    serial_data_manipulation = SerialDataManipulation()
+    serial_data_manipulation.get_json_string()
     serial_commands_class.close_port()
 
 
