@@ -13,11 +13,22 @@ class SerialDataManipulation:
 
     """opens local path floder calibration and sorts them by name"""
     jsonlist.sort()
-    recent_file_selection = jsonlist[-1]
-    print(recent_file_selection)
 
-    with open(f"calibration/{recent_file_selection}") as json_file:
-        jsondata = json.load(json_file)
+    if len(jsonlist) == 0:
+        print("Calibration directory empty")
+        recent_file_selection = "0"
+    else:
+        print(len(jsonlist))
+        recent_file_selection = jsonlist[-1]
+        print(recent_file_selection)
+
+    if os.path.exists(f"calibration/{recent_file_selection}") == True:
+        print("File exists.. Opening")
+        with open(f"calibration/{recent_file_selection}") as json_file:
+            jsondata = json.load(json_file)
+        print(jsondata["CalibrationTime"])
+    else:
+        print("No calibration file exists, must read EEPROM")
 
     class cal_data():
         calibration_time = ""
@@ -50,6 +61,7 @@ class SerialDataManipulation:
         return self.list_data
 
     def get_json_string(self):
+        """Obtains string of the JSON calibration file in the EEPROM"""
 
         numlist = []
         string_json = ""
@@ -58,24 +70,41 @@ class SerialDataManipulation:
             if numlist[i] == "ÿ":
                 break
             string_json += numlist[i]
-        print("List of values", numlist)
-        print(string_json)
         json = string_json
         self.serial_commands_class.close_port()
 
         return json
 
     def sha1_from_json(self, json_string):
-        """Breaks string apart"""
-        is_SHA1_ok = False
+        """Receives json string from EEPROM, SHA1 string and boolean result from SHA1 comparison"""
+
+        # Separates SHA1 from the json string, calculates new SHA1 from read json and compares the two
         split1 = json_string.split("©")
-        split2 = split1[1].split("{")
+        split2 = split1[1].split("{", 1)
         sha1_from_eeprom = split2[0]
         json_string_cut = "{" + split2[1]
+        json_string_cut_bytes = bytes(str(json_string_cut).encode("ascii"))
+        sha1_calculate = hashlib.sha1(json_string_cut_bytes).hexdigest()
+        sha1_calculate_cap = str.upper(sha1_calculate)
 
-        sha1_check = hashlib.sha1(json_string_cut)
+        return sha1_from_eeprom, sha1_calculate_cap
 
-        if sha1_from_eeprom == sha1_check:
+    def check_SHA1(self, SHA1_from_EEPROM, SHA1_calculated):
+        is_SHA1_ok = False
+        if SHA1_from_EEPROM == SHA1_calculated:
             is_SHA1_ok = True
-
+            print("SHA1 is valid")
         return is_SHA1_ok
+
+    def save_json_to_file(self, json_string, SHA1_calculated):
+        with open(f"calibration/{SHA1_calculated}.json", 'w') as outfile:
+            outfile.write(json_string)
+
+    def read_json_from_eeprom(self):
+        json_string = self.get_json_string()
+
+        SHA1_from_EEPROM, SHA1_calculated = self.sha1_from_json(json_string)
+
+        self.check_SHA1(SHA1_from_EEPROM, SHA1_calculated)
+
+        self.save_json_to_file(json_string, SHA1_calculated)

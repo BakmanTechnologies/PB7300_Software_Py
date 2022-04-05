@@ -1447,8 +1447,6 @@ class SerialCommands:
         """Reads the eemprom 1 memory address at a time and returns a char"""
         split_address = (math.floor(address/256))
 
-        # print(hex(split_address))
-
         modded_address = (address % 256)
 
         # Separates address lsb msb, turns them into hex, capitalizes the chars, checks if theres only 1 char adds
@@ -1482,7 +1480,6 @@ class SerialCommands:
     def check_data(self, address):
         value = self.read_eeprom(address)
         return value
-        # return eeprom_data
 
     def generate_sha1(self):
         duh = 0

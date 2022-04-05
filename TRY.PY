@@ -3,51 +3,28 @@ import hashlib
 import json
 import os
 
-
-def test_eeprom():
-    string1 = "hehe"
-    accsii = ""
-
-    for i in string1:
-        accsii += str(hex(ord(i)))
-
-    print(accsii)
-
-    hexstring1 = hex(string1)
-
-    print(hexstring1)
-    sha1 = hashlib.sha1(hexstring1)
-    print(sha1)
-
-
 jsonlist = os.listdir("calibration")
 
-# selects most recent file
+"""opens local path floder calibration and sorts them by name"""
+jsonlist.sort()
 
-# opens the json file with the retrieved file name string
-
-
-def open_json():
-    """opens local path floder calibration and sorts them by name"""
-    jsonlist.sort()
+if len(jsonlist) == 0:
+    print("Calibration directory empty")
+    recent_file_selection = "0"
+else:
+    print(len(jsonlist))
     recent_file_selection = jsonlist[-1]
     print(recent_file_selection)
 
-    with open(f"calibration/{recent_file_selection}") as json_file:
-        jsondata = json.load(json_file)
-        # importdata = Scandata(jsondata)
-        # print(importdata.get_username())
-        # print(importdata.get_scanTime())
-        # print(importdata.get_upScanFreq())
 
-    return jsondata
-
-
-def load_json():
-    raw_json = open_json()
-    print(raw_json)
-    print(raw_json["CalibrationTime"])
+def test_os():
+    if os.path.exists(f"calibration/{recent_file_selection}") == True:
+        print("File exists.. Opening")
+        with open(f"calibration/{recent_file_selection}") as json_file:
+            jsondata = json.load(json_file)
+        print(jsondata["CalibrationTime"])
+    else:
+        print("No calibration file exists, must read EEPROM")
 
 
-load_json()
-# test_eeprom()
+test_os()

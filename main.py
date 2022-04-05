@@ -7,7 +7,7 @@ def main():
     """Main function"""
     serial_commands_class = SerialCommands()
     serial_data_manipulation = SerialDataManipulation()
-    serial_data_manipulation.get_json_string()
+    serial_data_manipulation.read_json_from_eeprom()
     serial_commands_class.close_port()
 
 
