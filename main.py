@@ -1,14 +1,15 @@
 from serial_commands_PB7200 import SerialCommands
 from serial_data_manipulation import SerialDataManipulation
-import time
+from utils import read_json_from_file
+from cal_data import CalData
 
 
 def main():
     """Main function"""
-    serial_commands_class = SerialCommands()
-    serial_data_manipulation = SerialDataManipulation()
-    serial_data_manipulation.read_json_from_eeprom()
-    serial_commands_class.close_port()
+    cal_data = read_json_from_file()
+    serial_data_manipulation = SerialDataManipulation(cal_data)
+    serial_data_manipulation.testing_imports()
+    serial_data_manipulation.close_port()
 
 
 if __name__ == "__main__":

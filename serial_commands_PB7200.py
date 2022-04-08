@@ -1,9 +1,6 @@
-
-from distutils.log import error
 import serial
 import serial.tools.list_ports as ports
 import time
-import sys
 from collections import namedtuple
 from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 import math
@@ -26,12 +23,6 @@ class SerialCommands:
         print("PB7200 Python Command Module v0.01")
         # com_select = input("Specify COM port selection: ")
 
-        # print("Select a command to send to the PB7200 from the list:")
-        # print("1: Read Firmware version")
-        # print("2: Read lock-in 1st harmonic output")
-        # print("3: Read lock-in and LD0, LD1 temps")
-        # command_select = input("Selection: ")
-
         # Opens serial port with set properties
         self.PB7200COMPort.port = "COM9"
         self.PB7200COMPort.baudrate = 56000
@@ -44,8 +35,8 @@ class SerialCommands:
         try:
             self.PB7200COMPort.open()
             print("Succeded in opening PB7200 port")
-        except:
-            print("Failed to open port")
+        except Exception as e:
+            print(type(e), "Failed to open port")
 
     def build_tx_bytes(self, hex_list):
         """ Builds the 6 bytes to send from a hex values list"""

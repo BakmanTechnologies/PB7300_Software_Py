@@ -1,64 +1,13 @@
 from serial_commands_PB7200 import SerialCommands
+from cal_data import CalData
 import hashlib
-import json
-import os
 
 
-class SerialDataManipulation:
-    serial_commands_class = SerialCommands()
+class SerialDataManipulation():
 
-    list_data = []
-
-    jsonlist = os.listdir("calibration")
-
-    """opens local path floder calibration and sorts them by name"""
-    jsonlist.sort()
-
-    if len(jsonlist) == 0:
-        print("Calibration directory empty")
-        recent_file_selection = "0"
-    else:
-        print(len(jsonlist))
-        recent_file_selection = jsonlist[-1]
-        print(recent_file_selection)
-
-    if os.path.exists(f"calibration/{recent_file_selection}") == True:
-        print("File exists.. Opening")
-        with open(f"calibration/{recent_file_selection}") as json_file:
-            jsondata = json.load(json_file)
-        print(jsondata["CalibrationTime"])
-    else:
-        print("No calibration file exists, must read EEPROM")
-
-    class cal_data():
-        calibration_time = ""
-        operator_name = ""
-        spectrometer_sn = ""
-        mainboard_version = ""
-        limit_min_freq_MHz = 0
-        limit_max_freq_MHz = 0
-        limit_min_freq_resolution_MHz = ""
-        lasercontrol = ""
-        phase_modulator_installed = False
-        phase_modulator_SN = ""
-        phase_modulate_type = ""
-        stablize_start_fac = 0
-        stablize_trans_tac = 0
-        stablize_start_cnt = 0
-        stablize_trans_cnt = 0
-        power_mode = ""
-        pcs_bias = 0
-        source_pcs_correction = 0
-        detector_pcs_correction = 0
-        channels = 0
-        coeff_Up_Down = []
-        gain = 0
-        zero_cross = False
-        L1_minus_L0 = False
-        second_harmonic = False
-
-    def get_list_values(self):
-        return self.list_data
+    def __init__(self, cal_data) -> None:
+        self.cal_data = cal_data
+        self.serial_commands_class = SerialCommands()
 
     def get_json_string(self):
         """Obtains string of the JSON calibration file in the EEPROM"""
@@ -71,7 +20,6 @@ class SerialDataManipulation:
                 break
             string_json += numlist[i]
         json = string_json
-        self.serial_commands_class.close_port()
 
         return json
 
@@ -108,3 +56,9 @@ class SerialDataManipulation:
         self.check_SHA1(SHA1_from_EEPROM, SHA1_calculated)
 
         self.save_json_to_file(json_string, SHA1_calculated)
+
+    def close_port(self):
+        self.serial_commands_class.close_port()
+
+    def testing_imports(self):
+        print(self.cal_data.LD0.upscan_coef_seg_1[1])
