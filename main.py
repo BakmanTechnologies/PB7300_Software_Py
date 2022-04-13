@@ -8,7 +8,7 @@ def main():
     """Main function"""
     cal_data = read_json_from_file()
     serial_data_manipulation = SerialDataManipulation(cal_data)
-    serial_data_manipulation.testing_imports()
+    serial_data_manipulation.dwell_control(400, 10)
     serial_data_manipulation.close_port()
 
 
