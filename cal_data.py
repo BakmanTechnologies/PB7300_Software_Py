@@ -39,7 +39,7 @@ class CalData():
 
 
 class LaserData():
-    """Contains LD0, LD1 data from calibration, is contained within caldata above"""
+    """Data structure for LD0, LD1 data from calibration"""
 
     def __init__(self, laser_data) -> None:
         self.date_code = laser_data.get("DateCode", "")
