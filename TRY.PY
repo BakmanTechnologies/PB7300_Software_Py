@@ -27,4 +27,23 @@ def test_os():
         print("No calibration file exists, must read EEPROM")
 
 
-test_os()
+def test_setting():
+    temp_scaled = int(100 / 3)
+
+    temp_hex = hex(temp_scaled)
+
+    print(temp_hex)
+
+    n = 2
+
+    split_hex_list = [temp_hex[i:i+n]
+                      for i in range(0, len(temp_hex), n)]
+
+    print(split_hex_list)
+
+    current_msb = "00"
+
+    current_lsb = str(split_hex_list[2])
+
+
+test_setting()

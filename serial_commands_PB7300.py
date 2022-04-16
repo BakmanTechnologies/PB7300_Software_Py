@@ -13,10 +13,9 @@ class SerialCommands:
     TEMP_READ_SCALING_CONST_N = 1411.3
     TEMP_READ_SCALING_CONST_C = 924.023
 
-    TEMP_SET_SCALING_CONST_M = 936.96
-    TEMP_SET_SCALING_CONST_B = 54.08
+    TEMP_SET_SCALING_CONST_L = 936.96
+    TEMP_SET_SCALING_CONST_D = 54.08
 
-    CURRENT_REV2 = 213.33
     CURRENT_REV5 = 160
     list_temperatures = []
 
@@ -29,7 +28,7 @@ class SerialCommands:
         # com_select = input("Specify COM port selection: ")
 
         # Opens serial port with set properties
-        self.PB7200COMPort.port = "COM9"
+        self.PB7200COMPort.port = "COM6"
         self.PB7200COMPort.baudrate = 115200
         self.PB7200COMPort.parity = PARITY_NONE
         self.PB7200COMPort.bytesize = EIGHTBITS
@@ -66,7 +65,7 @@ class SerialCommands:
         # send the characterS to the device
         self.PB7200COMPort.write(tx_bytes)
 
-        time.sleep(0.01)
+        time.sleep(0.05)
 
         # let's wait one second before reading output (let's give device time to answer)
         print("Awaiting response")
@@ -140,7 +139,7 @@ class SerialCommands:
         #TEST_TEMP = 25
 
         temp_scaled = int(
-            (set_temp + self.TEMP_SET_SCALING_CONST_B)*self.TEMP_SET_SCALING_CONST_M)
+            (set_temp * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
 
         temp_hex = hex(temp_scaled)
 
@@ -183,7 +182,7 @@ class SerialCommands:
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
-            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_M)) - self.TEMP_SET_SCALING_CONST_B)
+            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
         print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
 
@@ -193,7 +192,7 @@ class SerialCommands:
         #TEST_TEMP = 25
 
         temp_scaled = int(
-            (set_temp + self.TEMP_SET_SCALING_CONST_B)*self.TEMP_SET_SCALING_CONST_M)
+            (set_temp * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
 
         temp_hex = hex(temp_scaled)
 
@@ -235,7 +234,7 @@ class SerialCommands:
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
-            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_M)) - self.TEMP_SET_SCALING_CONST_B)
+            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
         print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
 
@@ -310,7 +309,7 @@ class SerialCommands:
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
-            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_M)) - self.TEMP_SET_SCALING_CONST_B)
+            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
         print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
 
@@ -323,7 +322,7 @@ class SerialCommands:
         #TEST_TEMP = 25
 
         temp_scaled = int(
-            (set_temp + self.TEMP_SET_SCALING_CONST_B)*self.TEMP_SET_SCALING_CONST_M)
+            (set_temp * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
 
         temp_hex = hex(temp_scaled)
 
@@ -365,17 +364,17 @@ class SerialCommands:
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
-            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_M)) - self.TEMP_SET_SCALING_CONST_B)
+            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_READ_SCALING_CONST_N)) - self.TEMP_READ_SCALING_CONST_C)
 
         print(f"Laser 2 temp: {temp_1_full_decimal_unscaled}")
 
-    def read_then_set_temp_LD1(self):
+    def read_then_set_temp_LD1(self, set_temp):
         """Reads the LD1 temp"""
 
         TEST_TEMP = 25
 
         temp_scaled = int(
-            (TEST_TEMP + self.TEMP_SET_SCALING_CONST_B)*self.TEMP_SET_SCALING_CONST_M)
+            (set_temp * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
 
         temp_hex = hex(temp_scaled)
 
@@ -416,11 +415,11 @@ class SerialCommands:
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
-            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_M)) - self.TEMP_SET_SCALING_CONST_B)
+            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
         print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
 
-    def read_then_set_temp_LD0_and_LD1(self):
+    def read_then_set_temp_LD0_and_LD1(self, set_temp_ld0, set_temp_ld1):
         """Reads the LD1 temp"""
         # TODO needs to get proper scaling placed
         # TEMP 1
@@ -428,7 +427,7 @@ class SerialCommands:
         TEST_TEMP_1 = 25
 
         temp_1_scaled = int(
-            (TEST_TEMP_1 + self.TEMP_SET_SCALING_CONST_B)*self.TEMP_SET_SCALING_CONST_M)
+            (set_temp_ld0 * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
 
         temp_1_hex = hex(temp_1_scaled)
 
@@ -446,7 +445,7 @@ class SerialCommands:
         TEST_TEMP_2 = 25
 
         temp_2_scaled = int(
-            (TEST_TEMP_2 + self.TEMP_SET_SCALING_CONST_B)*self.TEMP_SET_SCALING_CONST_M)
+            (set_temp_ld1 * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
 
         temp_2_hex = hex(temp_2_scaled)
 
@@ -510,7 +509,7 @@ class SerialCommands:
         print(
             f"Laser 1 temp: {temp_1_full_decimal_unscaled} Laser 2 temp: {temp_2_full_decimal_unscaled}")
 
-    def read_avg_count_second_lockin_output(self):
+    def read_sample_count_second_lockin_output(self):
         """reads lock-in 1st harmonic"""
 
         hex_list = []
@@ -527,7 +526,7 @@ class SerialCommands:
 
         split_hex_list = self.convert_hex_and_split_bytes(lockin_bytes)
 
-        # Average count
+        # Sample count
 
         count_1st_msb = split_hex_list[2]
 
@@ -566,6 +565,8 @@ class SerialCommands:
         second_lock_in_full_decimal = f"{second_lock_in_msb_full_decimal}.{second_lock_in_lsb_full_decimal}"
 
         print(second_lock_in_full_decimal)
+
+        return float(count_full_decimal), float(second_lock_in_full_decimal)
 
     # Lock-in mode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -642,19 +643,6 @@ class SerialCommands:
         split_hex_list = self.convert_hex_and_split_bytes(
             lockin_and_temps_bytes)
 
-        lockin_values = namedtuple('lockin_values', [
-            'lock_in_1st_msb_hex', 'lock_in_2nd_msb_hex',
-            'lock_in_3rd_msb_hex', 'lock_in_lsb_hex'])
-
-        lockin_values = lockin_values(split_hex_list[2], split_hex_list[3],
-                                      split_hex_list[4], split_hex_list[5])
-
-        temp_values = namedtuple('temp_values', [
-            'temp_1_msb_hex', 'temp_1_lsb_hex', 'temp_2_msb_hex', 'temp_2_lsb_hex'])
-
-        temp_values = temp_values(
-            split_hex_list[6], split_hex_list[7], split_hex_list[8], split_hex_list[9])
-
         lock_in_1st_msb_hex = split_hex_list[2]
 
         lock_in_2nd_msb_hex = split_hex_list[3]
@@ -673,8 +661,6 @@ class SerialCommands:
 
         lock_in_lsb_full_decimal = int(lock_in_lsb_hex, 16)
 
-        lock_in_msb_full_test = f"{lockin_values.lock_in_1st_msb_hex}{lockin_values.lock_in_2nd_msb_hex}{lockin_values.lock_in_3rd_msb_hex}"
-
         lock_in_msb_full = f"{lock_in_1st_msb_hex}{lock_in_2nd_msb_hex}{lock_in_3rd_msb_hex}"
 
         lock_in_msb_full_decimal = int(lock_in_msb_full, 16)
@@ -692,7 +678,7 @@ class SerialCommands:
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
-            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_READ_SCALING_CONST_N)) - self.TEMP_READ_SCALING_CONST_C)
+            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
         # laser 2
 
@@ -705,18 +691,20 @@ class SerialCommands:
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
-            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_READ_SCALING_CONST_N)) - self.TEMP_READ_SCALING_CONST_C)
+            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
         print(f"Lock in output: {lock_in_full_decimal}")
         print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
         print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
+
+        return float(lock_in_full_decimal), temp_1_full_decimal_unscaled, temp_2_full_decimal_unscaled
 
     # Set laser power ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def set_LD0_Power(self, set_power):
         """Sets the LD0 power"""
 
-        TEST_CURRENT = 100
+        #TEST_CURRENT = 100
 
         temp_scaled = int(set_power * self.CURRENT_REV5)
 
@@ -749,8 +737,6 @@ class SerialCommands:
 
         current_1_lsb_hex = split_hex_list[7]
 
-        # laser 1
-
         current_1_msb_decimal = self.convert_hex_to_dec_values(
             current_1_msb_hex)
 
@@ -762,7 +748,7 @@ class SerialCommands:
         current_1_lsb_decimal_float = float(current_1_lsb_decimal)
 
         current_1_full_decimal_unscaled = (
-            (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.CURRENT_REV2)
+            (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.CURRENT_REV5)
 
         print(current_1_full_decimal_unscaled)
 
@@ -786,7 +772,7 @@ class SerialCommands:
 
         hex_list = []
         hex_list.append("AA")
-        hex_list.append("80")
+        hex_list.append("81")
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append(current_msb)
@@ -815,7 +801,7 @@ class SerialCommands:
         current_2_lsb_decimal_float = float(current_2_lsb_decimal)
 
         current_2_full_decimal_unscaled = (
-            (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.CURRENT_REV2)
+            (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.CURRENT_REV5)
 
         print(current_2_full_decimal_unscaled)
 
@@ -890,6 +876,53 @@ class SerialCommands:
         PCS_disable_command = self.write_serial(tx_bytes)
 
         print(PCS_disable_command)
+
+    def read_pcs_current(self, channel, source_or_detector):
+        """Reads dsp temperature value"""
+
+        if channel == 0:
+            channel_byte = "00"
+        else:
+            channel_byte = "01"
+
+        if source_or_detector == 0:
+            source_byte = "00"
+        else:
+            source_byte = "01"
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C2")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append(channel_byte)
+        hex_list.append(source_byte)
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        pcs_current_bytes = self.write_serial(tx_bytes)
+
+        split_hex_list = self.convert_hex_and_split_bytes(
+            pcs_current_bytes)
+
+        pcs_current_msb_hex = split_hex_list[8]
+
+        pcs_current_lsb_hex = split_hex_list[9]
+
+        pcs_current_msb_decimal = self.convert_hex_to_dec_values(
+            pcs_current_msb_hex)
+
+        pcs_current_msb_decimal_float = float(pcs_current_msb_decimal)
+
+        pcs_current_lsb_decimal = self.convert_hex_to_dec_values(
+            pcs_current_lsb_hex)
+
+        pcs_current_lsb_decimal_float = float(pcs_current_lsb_decimal)
+
+        pcs_current_full_decimal_unscaled = (
+            ((((2**8) * pcs_current_msb_decimal_float)+pcs_current_lsb_decimal_float)/32))
+
+        print(f"PCS current: {pcs_current_full_decimal_unscaled}")
 
     # Laser Bias Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -971,7 +1004,7 @@ class SerialCommands:
 
         hex_list = []
         hex_list.append("AA")
-        hex_list.append("C2")
+        hex_list.append("C1")
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append("00")
@@ -1157,7 +1190,7 @@ class SerialCommands:
 
         lockin_enable_dec = self.convert_hex_to_dec_values(lockin_enable_hex)
 
-        print(f"Lockin enable set to: {lockin_enable_dec}")
+        print(f"Lockin enabled")
 
     def lockin_disable(self):
         """Disables Lock-in"""
@@ -1178,7 +1211,7 @@ class SerialCommands:
 
         lockin_disable_dec = self.convert_hex_to_dec_values(lockin_disable_hex)
 
-        print(f"Lockin enable set to: {lockin_disable_dec}")
+        print("Lockin disabled")
 
     # Sleep timer control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1271,7 +1304,12 @@ class SerialCommands:
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
-            (((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/80)
+            ((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)
+
+        if temp_1_full_decimal_unscaled < 32768:
+            temp_1_full_decimal_unscaled = 0
+
+        temp_1_full_decimal_scaled = (temp_1_full_decimal_unscaled/80)
 
         # laser 2
 
@@ -1284,10 +1322,15 @@ class SerialCommands:
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
-            (((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/80)
+            ((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)
 
-        print(f"Laser 1 Bias Current: {temp_1_full_decimal_unscaled}")
-        print(f"Laser 2 Bias Current: {temp_2_full_decimal_unscaled}")
+        if temp_2_full_decimal_unscaled < 32768:
+            temp_2_full_decimal_unscaled = 0
+
+        temp_2_full_decimal_scaled = (temp_2_full_decimal_unscaled/80)
+
+        print(f"Laser 1 Bias Current: {temp_1_full_decimal_scaled}")
+        print(f"Laser 2 Bias Current: {temp_2_full_decimal_scaled}")
 
     # Lock in time constant ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1300,11 +1343,14 @@ class SerialCommands:
 
         time_hex = hex(time_scaled)
 
-        split_hex_list = self.split_hex(time_hex)
+        n = 2
 
-        time_msb = str(split_hex_list[1])
+        split_hex_list = [time_hex[i:i+n]
+                          for i in range(0, len(time_hex), n)]
 
-        time_lsb = str(split_hex_list[2])
+        time_msb = str("00")
+
+        time_lsb = str(split_hex_list[1])
 
         hex_list = []
         hex_list.append("AA")

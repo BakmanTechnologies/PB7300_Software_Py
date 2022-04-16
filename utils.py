@@ -22,7 +22,7 @@ def read_json_from_file():
         print("File exists.. Opening")
         with open(f"calibration/{recent_file_selection}") as json_file:
             jsondata = json.load(json_file)
-        print(jsondata["CalibrationTime"])
+        # print(jsondata["CalibrationTime"])
 
     else:
         print("No calibration file exists, must read EEPROM")

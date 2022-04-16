@@ -1,6 +1,6 @@
-import numpy as np
 from serial_commands_PB7300 import SerialCommands
 import hashlib
+import time
 
 
 class SerialDataManipulation():
@@ -18,17 +18,17 @@ class SerialDataManipulation():
             numlist.append(self.serial_commands_class.read_eeprom(i))
             if numlist[i] == "ÿ":
                 break
-            string_json += numlist[i]
+            if i > 2:
+                string_json += numlist[i]
         json = string_json
 
         return json
 
     def sha1_from_json(self, json_string):
         """Receives json string from EEPROM, SHA1 string and boolean result from SHA1 comparison"""
-
+        print(json_string)
         # Separates SHA1 from the json string, calculates new SHA1 from read json and compares the two
-        split1 = json_string.split("©")
-        split2 = split1[1].split("{", 1)
+        split2 = json_string.split("{", 1)
         sha1_from_eeprom = split2[0]
         json_string_cut = "{" + split2[1]
         json_string_cut_bytes = bytes(str(json_string_cut).encode("ascii"))
@@ -199,16 +199,102 @@ class SerialDataManipulation():
         print(actual_freq)
 
     def dwell_control(self, target_ghz, time_constant):
+        dwell_normalized = []
+        temps_read_ld0 = []
+        temps_read_ld1 = []
+
         ld0_temp, ld1_temp = self.calculate_temps_for_target_ghz(target_ghz)
+        print("Setting Laser Temperatures: ")
         self.serial_commands_class.set_LD0_Temperature(ld0_temp)
         self.serial_commands_class.set_LD1_Temperature(ld1_temp)
+        time.sleep(1)
+        print("Turning fan on: ")
+        self.serial_commands_class.fan_on_high()
+        time.sleep(1)
+        print("Setting Laser Power: ")
+        self.serial_commands_class.set_LD0_Power(self.cal_data.LD0.cal_bias)
+        self.serial_commands_class.set_LD1_Power(self.cal_data.LD1.cal_bias)
+        time.sleep(1)
+        print("Enabling PCS: ")
         self.serial_commands_class.PCS_enable()
+        time.sleep(1)
+        print("Enabling TEC: ")
         self.serial_commands_class.TEC_enable()
+        time.sleep(1)
+        print("Setting time constant: ")
         self.serial_commands_class.set_lockin_time_constant(time_constant)
+        time.sleep(1)
+        print("Setting gain: ")
         self.serial_commands_class.set_lockin_gain()
+        time.sleep(1)
+        print("Enabling lockin amplifier: ")
         self.serial_commands_class.lockin_enable()
+        time.sleep(1)
+        print("Enabling laser bias: ")
         self.serial_commands_class.laser_bias_enable()
+
+        for i in range(10):
+            lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
+            print("Lockin read: ", lockin_1st)
+            print("LD0 temp: ", temp_read_ld0)
+            print("LD1 temp: ", temp_read_ld1)
+            count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
+            normalize_1, normalize_2 = self.normalize_lockin(
+                count, lockin_1st, lockin_2nd)
+            dwell_normalized.append(normalize_1)
+            temps_read_ld0.append(temp_read_ld0)
+            temps_read_ld1.append(temp_read_ld1)
+
+            time.sleep(1)
+
+        # time.sleep(10)
+        print("Shutdown sequence: ")
+
+        self.serial_commands_class.set_LD0_Temperature(25)
+        self.serial_commands_class.set_LD1_Temperature(25)
+        time.sleep(1)
+        self.serial_commands_class.TEC_disable()
+        time.sleep(1)
+        self.serial_commands_class.fan_off()
+        time.sleep(1)
+        self.serial_commands_class.PCS_disable()
+        time.sleep(1)
+        self.serial_commands_class.laser_bias_disable()
+        time.sleep(1)
+        self.serial_commands_class.lockin_disable()
+
+        print(dwell_normalized)
+
+        self.close_port()
+
+    def correct_for_target(self, ghz, target_ghz):
+        error_freq_ghz = target_ghz - ghz
+        #error_i_freq_ghz += error_freq_ghz
+
+        correction_factor_p = 0.1
+        correction_factor_i = 0.000001
+
+    def normalize_lockin(self, count, lockin_value_1, lockin_value_2):
+        data_sample_1st_lockin = (lockin_value_1/count)**2
+        if lockin_value_2:
+            data_sample_2nd_lockin = ((lockin_value_1/count)**2)
+        else:
+            data_sample_2nd_lockin = 0
+        print(data_sample_1st_lockin)
+        print(data_sample_2nd_lockin)
+        return data_sample_1st_lockin, data_sample_2nd_lockin
+
+    def test_commands(self):
+        # print(self.serial_commands_class.read_version())
+        #lockin_1st, t1, t2 = self.serial_commands_class.read_lockin_1st_and_both_temps()
+        #count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
+        #self.normalize_lockin(count, lockin_1st, lockin_2nd)
+        # self.serial_commands_class.read_laser_currents()
+
+        self.serial_commands_class.read_pcs_current(0, 0)
 
     def testing_imports(self):
         print(self.cal_data.LD0.upscan_coef_seg_1[1])
         print(self.cal_data.LD0.upscan_breakpoint[1])
+        print(self.cal_data.LD0.cal_bias)
+        print(self.cal_data.LD1.cal_bias)
