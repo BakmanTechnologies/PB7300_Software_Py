@@ -3,3 +3,4 @@ __pycache__
 .vscode
 *tk_gpio
 calibration
+test.py
