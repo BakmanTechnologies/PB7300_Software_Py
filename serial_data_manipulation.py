@@ -207,33 +207,30 @@ class SerialDataManipulation():
         print("Setting Laser Temperatures: ")
         self.serial_commands_class.set_LD0_Temperature(ld0_temp)
         self.serial_commands_class.set_LD1_Temperature(ld1_temp)
-        time.sleep(1)
+        time.sleep(0.2)
         print("Turning fan on: ")
         self.serial_commands_class.fan_on_high()
-        time.sleep(1)
         print("Setting Laser Power: ")
         self.serial_commands_class.set_LD0_Power(self.cal_data.LD0.cal_bias)
         self.serial_commands_class.set_LD1_Power(self.cal_data.LD1.cal_bias)
-        time.sleep(1)
+        time.sleep(0.2)
         print("Enabling PCS: ")
         self.serial_commands_class.PCS_enable()
-        time.sleep(1)
+        time.sleep(0.2)
         print("Enabling TEC: ")
         self.serial_commands_class.TEC_enable()
-        time.sleep(1)
+        time.sleep(0.2)
         print("Setting time constant: ")
         self.serial_commands_class.set_lockin_time_constant(time_constant)
-        time.sleep(1)
         print("Setting gain: ")
         self.serial_commands_class.set_lockin_gain()
-        time.sleep(1)
         print("Enabling lockin amplifier: ")
         self.serial_commands_class.lockin_enable()
-        time.sleep(1)
+        time.sleep(0.2)
         print("Enabling laser bias: ")
         self.serial_commands_class.laser_bias_enable()
 
-        for i in range(10):
+        for i in range(150):
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print("Lockin read: ", lockin_1st)
             print("LD0 temp: ", temp_read_ld0)
@@ -245,34 +242,38 @@ class SerialDataManipulation():
             temps_read_ld0.append(temp_read_ld0)
             temps_read_ld1.append(temp_read_ld1)
 
-            time.sleep(1)
+            time.sleep(0.05)
 
         # time.sleep(10)
         print("Shutdown sequence: ")
 
         self.serial_commands_class.set_LD0_Temperature(25)
         self.serial_commands_class.set_LD1_Temperature(25)
-        time.sleep(1)
         self.serial_commands_class.TEC_disable()
-        time.sleep(1)
         self.serial_commands_class.fan_off()
-        time.sleep(1)
         self.serial_commands_class.PCS_disable()
-        time.sleep(1)
         self.serial_commands_class.laser_bias_disable()
-        time.sleep(1)
         self.serial_commands_class.lockin_disable()
 
         print(dwell_normalized)
 
         self.close_port()
 
-    def correct_for_target(self, ghz, target_ghz):
-        error_freq_ghz = target_ghz - ghz
+    def correct_for_target(self, actual_ghz, target_ghz, cumulative_corrections_ghz):
+        error_freq_ghz = target_ghz - actual_ghz
         #error_i_freq_ghz += error_freq_ghz
+        error_freq_i = 0
 
         correction_factor_p = 0.1
         correction_factor_i = 0.000001
+
+        cumulative_corrections_ghz = error_freq_ghz + \
+            (correction_factor_p * error_freq_ghz) + \
+            (correction_factor_i * error_freq_i)
+
+    def dwell_timer(self):
+        # self.dwell_control()
+        time.sleep(10)
 
     def normalize_lockin(self, count, lockin_value_1, lockin_value_2):
         data_sample_1st_lockin = (lockin_value_1/count)**2
@@ -283,6 +284,10 @@ class SerialDataManipulation():
         print(data_sample_1st_lockin)
         print(data_sample_2nd_lockin)
         return data_sample_1st_lockin, data_sample_2nd_lockin
+
+    def active_control(self, temp_ld1, temp_ld2):
+
+        pass
 
     def test_commands(self):
         # print(self.serial_commands_class.read_version())
