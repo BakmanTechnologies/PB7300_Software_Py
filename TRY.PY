@@ -6,8 +6,6 @@ from matplotlib import pyplot as plt
 import matplotlib.animation as animation
 
 
-master = tk.Tk()
-
 jsonlist = os.listdir("calibration")
 
 """opens local path floder calibration and sorts them by name"""
@@ -40,18 +38,27 @@ def test_timer():
         time.sleep(1)
 
 
-fig = plt.figure()
-ax1 = fig.add_subplot(1, 1, 1)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1, 1, 1)
 
 
-def animate(i):
+    def animate(i):
 
-    xar = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    yar = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
-    ax1.clear()
-    ax1.plot(xar, yar)
+        xar = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        yar = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+        ax1.clear()
+        ax1.plot(xar, yar)
 
 
-ani = animation.FuncAnimation(fig, animate, interval=1000)
-plt.show()
-test_timer()
+    ani = animation.FuncAnimation(fig, animate, interval=1000)
+    plt.show()
+    test_timer()
+
+def test_ifs():
+    ld0_correction_found = True
+    ld1_correction_found = False
+
+    if ld0_correction_found == False or ld1_correction_found == False:
+            print("False")
+
+test_ifs()
