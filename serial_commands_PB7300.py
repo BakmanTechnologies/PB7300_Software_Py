@@ -59,25 +59,25 @@ class SerialCommands:
 
     def write_serial(self, tx_bytes):
         """Function recieves tx_bytes list to send, returns rxBytes bytearray"""
-        print("Writing to PB7200")
+        #print("Writing to PB7200")
         self.PB7200COMPort.reset_input_buffer()
 
         # send the characterS to the device
         self.PB7200COMPort.write(tx_bytes)
 
-        time.sleep(0.05)
+        time.sleep(0.005)
 
         # let's wait one second before reading output (let's give device time to answer)
-        print("Awaiting response")
+        #print("Awaiting response")
 
-        print("Bytes in buffer to read: ")
-        print(self.PB7200COMPort.in_waiting)
+        #print("Bytes in buffer to read: ")
+        #print(self.PB7200COMPort.in_waiting)
 
         while self.PB7200COMPort.in_waiting > 0:
-            print("Reading Bytes")
+            #print("Reading Bytes")
             rx_bytes = self.PB7200COMPort.read(10)
 
-            print(rx_bytes)
+            #print(rx_bytes)
         try:
             return rx_bytes
         except UnboundLocalError as ex:
@@ -98,7 +98,7 @@ class SerialCommands:
         split_hex_version = [version_hex[i:i+char_count]
                              for i in range(0, len(version_hex), char_count)]
 
-        print(split_hex_version)
+        #print(split_hex_version)
 
         return split_hex_version
 
@@ -109,7 +109,7 @@ class SerialCommands:
         split_hex_version = [unsplit[i:i+char_count]
                              for i in range(0, len(unsplit), char_count)]
 
-        print(split_hex_version)
+        #print(split_hex_version)
 
         return split_hex_version
 
@@ -135,8 +135,10 @@ class SerialCommands:
     # Set temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def set_LD0_Temperature(self, set_temp):
         """Sets the LD0 temperature"""
-
-        #TEST_TEMP = 25
+        if set_temp < 5:
+            set_temp = 5
+        elif set_temp > 65:
+            set_temp = 65
 
         temp_scaled = int(
             (set_temp * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
@@ -184,12 +186,15 @@ class SerialCommands:
         temp_1_full_decimal_unscaled = (
             (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
-        print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
+        #print(f"Laser 0 temp: {temp_1_full_decimal_unscaled}")
 
     def set_LD1_Temperature(self, set_temp):
         """Sets the LD1 temperature"""
 
-        #TEST_TEMP = 25
+        if set_temp < 5:
+            set_temp = 5
+        elif set_temp > 65:
+            set_temp = 65
 
         temp_scaled = int(
             (set_temp * self.TEMP_SET_SCALING_CONST_L)+self.TEMP_SET_SCALING_CONST_D)
@@ -236,7 +241,7 @@ class SerialCommands:
         temp_2_full_decimal_unscaled = (
             (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
-        print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
+        #print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
 
     # Read temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1384,8 +1389,10 @@ class SerialCommands:
         print(f"Lock in time constants: {time_full_decimal_unscaled}")
 
     # Set lock in gain ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def set_lockin_gain(self):
+    def set_lockin_gain(self, gain):
         """Sets the lockin gain"""
+
+        gain_formatted = f"0{gain}"
 
         hex_list = []
         hex_list.append("AA")
@@ -1393,7 +1400,7 @@ class SerialCommands:
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append("00")
-        hex_list.append("01")
+        hex_list.append(gain_formatted)
 
         tx_bytes = self.build_tx_bytes(hex_list)
 
