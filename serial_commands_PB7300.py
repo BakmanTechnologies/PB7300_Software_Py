@@ -577,17 +577,17 @@ class SerialCommands:
 
     def lock_in_mode(self):
         """Lock in mode is set 0 = RC filter with no flush, 1 = RC filter with flush on read, 2 = Integrate with flush on read"""
-        mode_1 = "00"
-        mode_2 = "01"
-        mode_3 = "02"
+        mode_0 = "00"
+        mode_1 = "01"
+        mode_2 = "02"
 
         hex_list = []
         hex_list.append("AA")
-        hex_list.append(mode_3)
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append("00")
+        hex_list.append(mode_2)
 
         tx_bytes = self.build_tx_bytes(hex_list)
 
@@ -622,6 +622,8 @@ class SerialCommands:
 
         lock_in_lsb_full_decimal = int(lock_in_lsb, 16)
 
+        lock_in_lsb_full_decimal = 0
+
         lock_in_msb_full = f"{lock_in_1st_msb}{lock_in_2nd_msb}{lock_in_3rd_msb}"
 
         lock_in_msb_full_decimal = int(lock_in_msb_full, 16)
@@ -654,6 +656,7 @@ class SerialCommands:
 
         lock_in_3rd_msb_hex = split_hex_list[4]
 
+
         lock_in_lsb_hex = split_hex_list[5]
 
         temp_1_msb_hex = split_hex_list[6]
@@ -667,6 +670,8 @@ class SerialCommands:
         lock_in_lsb_full_decimal = int(lock_in_lsb_hex, 16)
 
         lock_in_msb_full = f"{lock_in_1st_msb_hex}{lock_in_2nd_msb_hex}{lock_in_3rd_msb_hex}"
+
+        print("Lockin hex:" , lock_in_msb_full)
 
         lock_in_msb_full_decimal = int(lock_in_msb_full, 16)
 

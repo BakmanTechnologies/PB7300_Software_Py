@@ -205,8 +205,10 @@ class SerialDataManipulation():
         temps_read_ld1 = []
         lockin_1st_list = []
         actual_ghz = []
+        count_values = []
 
         ld0_temp, ld1_temp = self.calculate_temps_for_target_ghz(target_ghz)
+        self.serial_commands_class.lock_in_mode()
         print("Setting Laser Temperatures: ")
         self.serial_commands_class.set_LD0_Temperature(ld0_temp)
         self.serial_commands_class.set_LD1_Temperature(ld1_temp)
@@ -233,7 +235,7 @@ class SerialDataManipulation():
         print("Enabling laser bias: ")
         self.serial_commands_class.laser_bias_enable()
 
-        for i in range(200):
+        for i in range(100):
             elapsed_time = time.time() - start_time
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print("Time Stamp: ", elapsed_time)
@@ -246,6 +248,7 @@ class SerialDataManipulation():
             temps_read_ld1.append(temp_read_ld1)
             time_table.append(elapsed_time)
             lockin_1st_list.append(lockin_1st)
+            count_values.append(count)
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
             actual_ghz.append(true_ghz)
 
@@ -272,8 +275,9 @@ class SerialDataManipulation():
         print("Actual ghz: ",actual_ghz)
         print("LD0 temps: ", temps_read_ld0)
         print("LD1 temps: ", temps_read_ld1)
+        print("Count: ", count_values)
 
-        simple_graph(time_table,dwell_normalized)
+        simple_graph(time_table,lockin_1st_list)
 
         self.close_port()
 
@@ -312,6 +316,9 @@ class SerialDataManipulation():
         time.sleep(10)
 
     def normalize_lockin(self, count, lockin_value_1, lockin_value_2):
+        if lockin_value_1 < 1:
+            lockin_value_1 = 1
+
         data_sample_1st_lockin = (lockin_value_1/count)**2
         if lockin_value_2:
             data_sample_2nd_lockin = ((lockin_value_1/count)**2)
