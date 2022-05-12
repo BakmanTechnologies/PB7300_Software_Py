@@ -2,6 +2,7 @@ from cal_data import CalData
 import json
 import os
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 def read_json_from_file():
 
@@ -35,6 +36,8 @@ def read_json_from_file():
 def simple_graph(x,y):
     plt.plot(x, y)
 
+    plt.style.use('fivethirtyeight')
+
     #ax = fig.add_subplot(2, 1, 1)
 
     # ax.set_yscale('log')
@@ -46,4 +49,7 @@ def simple_graph(x,y):
     plt.ylabel('Power')
     #line = graph.plot(y, color='blue', lw=2)
     # To show the plot
+    ani = FuncAnimation(plt.gcf(), animate, interval = 100)
+
+    plt.axis([0, x[-1], 10e-2, 10e8])
     plt.show()

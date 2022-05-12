@@ -207,35 +207,29 @@ class SerialDataManipulation():
         actual_ghz = []
         count_values = []
 
+
+        # Startup procedure for PB7300 
         ld0_temp, ld1_temp = self.calculate_temps_for_target_ghz(target_ghz)
         self.serial_commands_class.lock_in_mode()
-        print("Setting Laser Temperatures: ")
         self.serial_commands_class.set_LD0_Temperature(ld0_temp)
         self.serial_commands_class.set_LD1_Temperature(ld1_temp)
-        time.sleep(0.2)
-        print("Turning fan on: ")
+        time.sleep(0.02)
         self.serial_commands_class.fan_on_high()
-        print("Setting Laser Power: ")
         self.serial_commands_class.set_LD0_Power(self.cal_data.LD0.cal_bias)
         self.serial_commands_class.set_LD1_Power(self.cal_data.LD1.cal_bias)
-        time.sleep(0.2)
-        print("Enabling PCS: ")
+        time.sleep(0.02)
         self.serial_commands_class.PCS_enable()
-        time.sleep(0.2)
-        print("Enabling TEC: ")
+        time.sleep(0.02)
         self.serial_commands_class.TEC_enable()
-        time.sleep(0.2)
-        print("Setting time constant: ")
+        time.sleep(0.02)
         self.serial_commands_class.set_lockin_time_constant(time_constant)
-        print("Setting gain: ")
         self.serial_commands_class.set_lockin_gain(self.cal_data.gain)
-        print("Enabling lockin amplifier: ")
         self.serial_commands_class.lockin_enable()
-        time.sleep(0.2)
-        print("Enabling laser bias: ")
+        time.sleep(0.02)
         self.serial_commands_class.laser_bias_enable()
 
-        for i in range(100):
+        #Loop that keeps dwell active for number in range() temporary solution
+        for i in range(200):
             elapsed_time = time.time() - start_time
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print("Time Stamp: ", elapsed_time)
@@ -256,11 +250,11 @@ class SerialDataManipulation():
             self.correct_for_target(true_ghz,target_ghz)
 
 
-            time.sleep(time_constant/1000 + 0.02)
+            time.sleep(time_constant/1000)
 
         # time.sleep(10)
-        print("Shutdown sequence: ")
-
+    
+        # Shutdown sequence for the PB7300
         self.serial_commands_class.set_LD0_Temperature(25)
         self.serial_commands_class.set_LD1_Temperature(25)
         self.serial_commands_class.TEC_disable()
@@ -277,38 +271,48 @@ class SerialDataManipulation():
         print("LD1 temps: ", temps_read_ld1)
         print("Count: ", count_values)
 
-        simple_graph(time_table,lockin_1st_list)
+        simple_graph(time_table,dwell_normalized)
 
         self.close_port()
 
     def correct_for_target(self, actual_ghz, target_ghz):
-        MAX_FREQ_DEVIATION_GHZ = 25
-        correction_factor_p = 0.1
-        correction_factor_i = 0.000001
+        """Takes the real ghz and compares to target, self corrects towards target"""
 
+        MAX_FREQ_DEVIATION_GHZ = 25
+        CORRECTION_FACTOR_P = 0.1
+        CORRECTION_FACTOR_I = 0.000001
+
+        # Calculates delta between the real ghz and target
         error_freq_ghz = target_ghz - actual_ghz
-        #error_i_freq_ghz += error_freq_ghz
+
+        # error_freq_i is a variable with class scope, value persists on dwell loop
         self.error_freq_i = self.error_freq_i + error_freq_ghz
 
+        # calculates adjusted frequency to match target frequency
         self.set_freq = self.set_freq + \
-            (correction_factor_p * error_freq_ghz) + \
-            (correction_factor_i * self.error_freq_i)
+            (CORRECTION_FACTOR_P * error_freq_ghz) + \
+            (CORRECTION_FACTOR_I * self.error_freq_i)
         
+        # if set_freq values are +-25 off target freq after correction, freq is set to target +-25
         if self.set_freq > target_ghz + MAX_FREQ_DEVIATION_GHZ:
             self.set_freq = target_ghz + MAX_FREQ_DEVIATION_GHZ
         elif self.set_freq < target_ghz - MAX_FREQ_DEVIATION_GHZ:
             self.set_freq = target_ghz - MAX_FREQ_DEVIATION_GHZ
         
+        # Laser temps are calculated to achieve new set_freq
         ld0_corrected , ld1_corrected = self.calculate_temps_for_target_ghz(self.set_freq)
 
+        # Laser temp is adjusted for LD0, LD1
         self.serial_commands_class.set_LD0_Temperature(ld0_corrected)
         self.serial_commands_class.set_LD1_Temperature(ld1_corrected)
         
+        # Stabilization measure, unused at the moment
         if abs(error_freq_ghz) > 0.25:
             self.stable_count = 0
         else:
             self.stable_count = self.stable_count + 1
         
+        # error_freq_last_ghz previous value is replaced with most recent
         self.error_freq_last_ghz = error_freq_ghz
 
     def dwell_timer(self):
@@ -316,19 +320,20 @@ class SerialDataManipulation():
         time.sleep(10)
 
     def normalize_lockin(self, count, lockin_value_1, lockin_value_2):
-        if lockin_value_1 < 1:
-            lockin_value_1 = 1
 
         data_sample_1st_lockin = (lockin_value_1/count)**2
         if lockin_value_2:
             data_sample_2nd_lockin = ((lockin_value_1/count)**2)
         else:
             data_sample_2nd_lockin = 0
+        
+        if lockin_value_1 < 1:
+            lockin_value_1 = 1
+        elif lockin_value_2 < 1:
+            lockin_value_2 = 1
+            
         return data_sample_1st_lockin, data_sample_2nd_lockin
 
-    def active_control(self, temp_ld1, temp_ld2):
-
-        pass
 
     def test_commands(self):
         # print(self.serial_commands_class.read_version())
