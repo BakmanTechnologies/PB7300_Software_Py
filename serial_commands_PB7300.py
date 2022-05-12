@@ -4,6 +4,7 @@ import time
 from collections import namedtuple
 from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 import math
+import numpy as np
 
 
 class SerialCommands:
@@ -65,24 +66,24 @@ class SerialCommands:
         # send the characterS to the device
         self.PB7200COMPort.write(tx_bytes)
 
-        time.sleep(0.005)
+        time.sleep(0.001)
 
         # let's wait one second before reading output (let's give device time to answer)
         #print("Awaiting response")
 
         #print("Bytes in buffer to read: ")
-        #print(self.PB7200COMPort.in_waiting)
+        print(self.PB7200COMPort.in_waiting)
 
         while self.PB7200COMPort.in_waiting > 0:
             #print("Reading Bytes")
             rx_bytes = self.PB7200COMPort.read(10)
 
-            #print(rx_bytes)
+            print(rx_bytes)
         try:
             return rx_bytes
         except UnboundLocalError as ex:
             print("No values to read")
-            rx_bytes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            rx_bytes = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
             # sys.exit()
 
     def close_port(self):
@@ -105,6 +106,8 @@ class SerialCommands:
     def split_hex(self, unsplit):
         """splits hex string every 2 chars to list"""
         char_count = 2
+
+        print("Raw Bytes: ", unsplit)
 
         split_hex_version = [unsplit[i:i+char_count]
                              for i in range(0, len(unsplit), char_count)]
@@ -129,6 +132,17 @@ class SerialCommands:
         dec_value = int(hex_value, 16)
 
         return dec_value
+    
+    def int32(self, x):
+        if x>0xFFFFFFFF:
+            raise OverflowError
+        if x>0x7FFFFFFF:
+            x=int(0x100000000-x)
+            if x<2147483648:
+                return -x
+            else:
+                return -2147483648
+        return x
 
     # Serial functions ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -529,47 +543,29 @@ class SerialCommands:
 
         lockin_bytes = self.write_serial(tx_bytes)
 
-        split_hex_list = self.convert_hex_and_split_bytes(lockin_bytes)
-
         # Sample count
 
-        count_1st_msb = split_hex_list[2]
+        count_1st_msb = lockin_bytes[2]
 
-        count_2nd_msb = split_hex_list[3]
+        count_2nd_msb = lockin_bytes[3]
 
-        count_3rd_msb = split_hex_list[4]
+        count_3rd_msb = lockin_bytes[4]
 
-        count_lsb = split_hex_list[5]
+        count_lsb = lockin_bytes[5]
 
-        count_lsb_full_decimal = int(count_lsb, 16)
-
-        count_msb_full = f"{count_1st_msb}{count_2nd_msb}{count_3rd_msb}"
-
-        count_msb_full_decimal = int(count_msb_full, 16)
-
-        count_full_decimal = f"{count_msb_full_decimal}.{count_lsb_full_decimal}"
-
-        print(count_full_decimal)
+        count_full_decimal = (self.int32(count_1st_msb) << 24) | (self.int32(count_2nd_msb) << 16) | (self.int32(count_3rd_msb) << 8) | (self.int32(count_lsb))
 
         # second lock in
 
-        second_lock_in_1st_msb = split_hex_list[6]
+        second_lock_in_1st_msb = lockin_bytes[6]
 
-        second_lock_in_2nd_msb = split_hex_list[7]
+        second_lock_in_2nd_msb = lockin_bytes[7]
 
-        second_lock_in_3rd_msb = split_hex_list[8]
+        second_lock_in_3rd_msb = lockin_bytes[8]
 
-        second_lock_in_lsb = split_hex_list[9]
+        second_lock_in_lsb = lockin_bytes[9]
 
-        second_lock_in_lsb_full_decimal = int(second_lock_in_lsb, 16)
-
-        second_lock_in_msb_full = f"{second_lock_in_1st_msb}{second_lock_in_2nd_msb}{second_lock_in_3rd_msb}"
-
-        second_lock_in_msb_full_decimal = int(second_lock_in_msb_full, 16)
-
-        second_lock_in_full_decimal = f"{second_lock_in_msb_full_decimal}.{second_lock_in_lsb_full_decimal}"
-
-        print(second_lock_in_full_decimal)
+        second_lock_in_full_decimal = (self.int32(second_lock_in_1st_msb) << 24) | (self.int32(second_lock_in_2nd_msb) << 16) | (self.int32(second_lock_in_3rd_msb) << 8) | (self.int32(second_lock_in_lsb))
 
         return float(count_full_decimal), float(second_lock_in_full_decimal)
 
@@ -622,8 +618,6 @@ class SerialCommands:
 
         lock_in_lsb_full_decimal = int(lock_in_lsb, 16)
 
-        lock_in_lsb_full_decimal = 0
-
         lock_in_msb_full = f"{lock_in_1st_msb}{lock_in_2nd_msb}{lock_in_3rd_msb}"
 
         lock_in_msb_full_decimal = int(lock_in_msb_full, 16)
@@ -649,15 +643,11 @@ class SerialCommands:
 
         split_hex_list = self.convert_hex_and_split_bytes(
             lockin_and_temps_bytes)
-
-        lock_in_1st_msb_hex = split_hex_list[2]
-
-        lock_in_2nd_msb_hex = split_hex_list[3]
-
-        lock_in_3rd_msb_hex = split_hex_list[4]
+        
+        print("Hex bytes: ", split_hex_list)
 
 
-        lock_in_lsb_hex = split_hex_list[5]
+        #Temperature bytes do not require bitwise operations
 
         temp_1_msb_hex = split_hex_list[6]
 
@@ -667,15 +657,34 @@ class SerialCommands:
 
         temp_2_lsb_hex = split_hex_list[9]
 
-        lock_in_lsb_full_decimal = int(lock_in_lsb_hex, 16)
+        # Bit shifting to obtain lockin value
 
-        lock_in_msb_full = f"{lock_in_1st_msb_hex}{lock_in_2nd_msb_hex}{lock_in_3rd_msb_hex}"
+        # The following code has been added to solve a unsigned bit issue that occurs with the 8.3 firmware
+        # The 1st MSB in position 3 of incoming bytes is either x00 to signal a positive or xff to signal a negative value
+        # The bit shifting required to process the MSB and LSB results in values bigger than 32 bit integers when converted
+        # To account for this the byte is replaced with an unsigned 8 bit 0
+        # A register is created where it is 1 when 1st MSB is x00 and -1 when xff 
+        # The register is then multiplied by the final lockin value giving us a max 32 bit integer that is + or - depending on the 1st MSB
 
-        print("Lockin hex:" , lock_in_msb_full)
+        unsigned_list = []
 
-        lock_in_msb_full_decimal = int(lock_in_msb_full, 16)
+        # Unsigned 8bit integer list created from incoming bytearray 
+        for i in range(10):
+            unsigned_list.append(np.uint8(lockin_and_temps_bytes[i]))
 
-        lock_in_full_decimal = f"{lock_in_msb_full_decimal}.{lock_in_lsb_full_decimal}"
+        # Register checks 1st MSB from unsigned int list, replaces (xff or 255) with 0 gives register + or - value
+        if lockin_and_temps_bytes[2] == 255:
+            unsigned_list[2] = np.uint8(0)
+            register = -1
+            print("entered")
+        else:
+            register = 1
+
+        # Bit shifting required for processing MSBs and LSBs, multiplied by register at end
+        lock_in_full_decimal_unscaled = (self.int32(unsigned_list[2]) << 24) | (self.int32(unsigned_list[3]) << 16) | (self.int32(unsigned_list[4]) << 8) | (self.int32(unsigned_list[5]))*register
+
+        # Value is scaled by X16 to undo firmware scaling
+        lock_in_full_decimal_scaled = float(lock_in_full_decimal_unscaled)*16
 
         # laser 1
 
@@ -703,11 +712,11 @@ class SerialCommands:
         temp_2_full_decimal_unscaled = (
             (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
-        print(f"Lock in output: {lock_in_full_decimal}")
-        print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
-        print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
+        #print(f"Lock in output: {lock_in_full_decimal_scaled}")
+        #print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
+        #print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
 
-        return float(lock_in_full_decimal), temp_1_full_decimal_unscaled, temp_2_full_decimal_unscaled
+        return lock_in_full_decimal_scaled, temp_1_full_decimal_unscaled, temp_2_full_decimal_unscaled
 
     # Set laser power ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
