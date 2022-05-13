@@ -49,7 +49,7 @@ def simple_graph(x,y):
     plt.ylabel('Power')
     #line = graph.plot(y, color='blue', lw=2)
     # To show the plot
-    ani = FuncAnimation(plt.gcf(), animate, interval = 100)
+    #ani = FuncAnimation(plt.gcf(), animate, interval = 100)
 
     plt.axis([0, x[-1], 10e-2, 10e8])
     plt.show()

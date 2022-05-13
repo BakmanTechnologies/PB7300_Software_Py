@@ -72,13 +72,13 @@ class SerialCommands:
         #print("Awaiting response")
 
         #print("Bytes in buffer to read: ")
-        print(self.PB7200COMPort.in_waiting)
+        #print(self.PB7200COMPort.in_waiting)
 
         while self.PB7200COMPort.in_waiting > 0:
             #print("Reading Bytes")
             rx_bytes = self.PB7200COMPort.read(10)
 
-            print(rx_bytes)
+            #print(rx_bytes)
         try:
             return rx_bytes
         except UnboundLocalError as ex:

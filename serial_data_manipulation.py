@@ -145,6 +145,7 @@ class SerialDataManipulation():
         return ld0_temp, ld1_temp
 
     def calculate_freq_using_poly(self, ld0_temp, ld1_temp):
+        """Using LD0, LD1 temps calculates freq using 5th order polynomials, returns ghz value"""
         ld0_correction_found = False
         ld1_correction_found = False
         result = 0
@@ -237,22 +238,22 @@ class SerialDataManipulation():
             print("Lock in sample count: ", count)
             normalize_1, normalize_2 = self.normalize_lockin(
                 count, lockin_1st, lockin_2nd)
+
             dwell_normalized.append(normalize_1)
             temps_read_ld0.append(temp_read_ld0)
             temps_read_ld1.append(temp_read_ld1)
             time_table.append(elapsed_time)
             lockin_1st_list.append(lockin_1st)
             count_values.append(count)
-            true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
             actual_ghz.append(true_ghz)
+
+            true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
 
             #Active control
             self.correct_for_target(true_ghz,target_ghz)
 
 
             time.sleep(time_constant/1000)
-
-        # time.sleep(10)
     
         # Shutdown sequence for the PB7300
         self.serial_commands_class.set_LD0_Temperature(25)
