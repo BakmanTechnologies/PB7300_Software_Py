@@ -3,6 +3,9 @@ import json
 import os
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import csv
+
+fieldnames = ["Time","Power"]
 
 def read_json_from_file():
 
@@ -53,3 +56,15 @@ def simple_graph(x,y):
 
     plt.axis([0, x[-1], 10e-2, 10e8])
     plt.show()
+
+def create_csv_file(scantime):
+    
+    with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        csv_writer.writeheader()
+
+def save_to_csv(info, scantime):
+
+    with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        csv_writer.writerow(info)

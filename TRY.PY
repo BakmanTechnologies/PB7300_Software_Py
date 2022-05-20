@@ -136,7 +136,6 @@ def test_behavior():
 
     #int32(value)
 
-    #convert = int(value,16) 0 , 9 , 132 , 150
-
+    #convert = int(value,16) 0 , 9 , 132 , 150 making
 
 test_behavior()

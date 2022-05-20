@@ -44,7 +44,7 @@ class SerialCommands:
             print(type(e), "Failed to open port")
 
     def build_tx_bytes(self, hex_list):
-        """ Builds the 6 bytes to send from a hex values list"""
+        """ Builds the 6 bytes to send from a hex values list """
 
         sync_byte = hex_list[0]
         command_byte = hex_list[1]

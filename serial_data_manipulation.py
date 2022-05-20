@@ -1,7 +1,9 @@
 from serial_commands_PB7300 import SerialCommands
 import hashlib
 import time
-from utils import simple_graph
+from datetime import datetime
+import csv
+import utils
 
 
 class SerialDataManipulation():
@@ -199,7 +201,10 @@ class SerialDataManipulation():
         return result
 
     def dwell_control(self, target_ghz, time_constant):
+        time_start_dwell = datetime.now()
+        scantime = time_start_dwell.strftime("%d-%m-%Y_%H-%M-%S")
         start_time = time.time()
+        counter = 0
         time_table = []
         dwell_normalized = []
         temps_read_ld0 = []
@@ -207,6 +212,8 @@ class SerialDataManipulation():
         lockin_1st_list = []
         actual_ghz = []
         count_values = []
+
+        utils.create_csv_file(scantime)
 
 
         # Startup procedure for PB7300 
@@ -230,7 +237,7 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_enable()
 
         #Loop that keeps dwell active for number in range() temporary solution
-        for i in range(200):
+        for i in range(500):
             elapsed_time = time.time() - start_time
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print("Time Stamp: ", elapsed_time)
@@ -238,6 +245,8 @@ class SerialDataManipulation():
             print("Lock in sample count: ", count)
             normalize_1, normalize_2 = self.normalize_lockin(
                 count, lockin_1st, lockin_2nd)
+            true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
+
 
             dwell_normalized.append(normalize_1)
             temps_read_ld0.append(temp_read_ld0)
@@ -247,11 +256,19 @@ class SerialDataManipulation():
             count_values.append(count)
             actual_ghz.append(true_ghz)
 
-            true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
+
 
             #Active control
             self.correct_for_target(true_ghz,target_ghz)
 
+            
+            # Save to csv
+            info = {"Time": time_table[i],
+                    "Power": dwell_normalized[i],}
+            
+            utils.save_to_csv(info, scantime)
+            
+            count += 1
 
             time.sleep(time_constant/1000)
     
@@ -272,9 +289,12 @@ class SerialDataManipulation():
         print("LD1 temps: ", temps_read_ld1)
         print("Count: ", count_values)
 
-        simple_graph(time_table,dwell_normalized)
+        utils.simple_graph(time_table,dwell_normalized)
 
         self.close_port()
+    
+    def scan(self, start_freq, stop_freq, step_size, time_constant):
+        pass
 
     def correct_for_target(self, actual_ghz, target_ghz):
         """Takes the real ghz and compares to target, self corrects towards target"""
