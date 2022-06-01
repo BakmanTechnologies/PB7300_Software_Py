@@ -1,3 +1,5 @@
+from pickle import TRUE
+from numpy import double
 from serial_commands_PB7300 import SerialCommands
 import hashlib
 import time
@@ -11,6 +13,7 @@ class SerialDataManipulation():
     error_freq_i = 0
     set_freq = 0
     stable_count = 0
+    MIN_POWER_VALUE = 0.000001
 
 
     def __init__(self, cal_data) -> None:
@@ -124,16 +127,19 @@ class SerialDataManipulation():
         ld1_slope_seg_2 = (laser_1_breakpoints_temp_3 - laser_1_breakpoints_temp_2) / \
             (laser_1_breakpoints_freq_3 - laser_1_breakpoints_freq_2)
 
-        ld1_intercept_seg_2 = (laser_1_breakpoints_temp_1 - ld1_slope_seg_2*laser_1_breakpoints_freq_1)
+        ld1_intercept_seg_2 = (laser_1_breakpoints_temp_2 - ld1_slope_seg_2*laser_1_breakpoints_freq_2)
 
         laser_1_temp_seg_2 = ld1_slope_seg_2 * target_ghz + ld1_intercept_seg_2
 
-        if laser_0_breakpoints_freq_2 >= target_ghz:
+        if target_ghz <= laser_0_breakpoints_freq_2 :
+            print("Seg 1")
             ld0_temp = laser_0_temp_seg_1
             ld1_temp = laser_1_temp_seg_1
         else:
+            print("Seg 2")
             ld0_temp = laser_0_temp_seg_2
             ld1_temp = laser_1_temp_seg_2
+        
 
         if ld0_temp > LASER_TEMP_MAX:
             ld0_temp = LASER_TEMP_MAX
@@ -200,7 +206,9 @@ class SerialDataManipulation():
 
         return result
 
-    def dwell_control(self, target_ghz, time_constant):
+    def dwell_control(self, target_ghz: int, time_constant: int):
+        """Basic dwell function, takes a target frequency to maintain, with a time constant to keep data for noise"""
+
         time_start_dwell = datetime.now()
         scantime = time_start_dwell.strftime("%d-%m-%Y_%H-%M-%S")
         start_time = time.time()
@@ -239,12 +247,18 @@ class SerialDataManipulation():
         #Loop that keeps dwell active for number in range() temporary solution
         for i in range(500):
             elapsed_time = time.time() - start_time
+
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
+
             print("Time Stamp: ", elapsed_time)
+
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
+
             print("Lock in sample count: ", count)
-            normalize_1, normalize_2 = self.normalize_lockin(
+            
+            normalize_1, normalize_2 = self.normalize_lockin_dwell(
                 count, lockin_1st, lockin_2nd)
+
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
 
 
@@ -267,8 +281,6 @@ class SerialDataManipulation():
                     "Power": dwell_normalized[i],}
             
             utils.save_to_csv(info, scantime)
-            
-            count += 1
 
             time.sleep(time_constant/1000)
     
@@ -293,11 +305,114 @@ class SerialDataManipulation():
 
         self.close_port()
     
-    def scan(self, start_freq, stop_freq, step_size, time_constant):
-        pass
+    def scan(self, start_freq_ghz: int, stop_freq_ghz: int, step_size_ghz: int, time_constant_ms: int, stabilize_factor: int):
+        """Basic scan function, takes start frequency, stop frequency, step size and time constant,
+        will run from start frequency to stop frequency saving the scan to csv in /scan"""
+        # TODO: does not work with step size smaller than 1
+
+        ld0_temps = []
+
+        ld1_temps = []
+
+        calculated_ghz = []
+
+        dwell_normalized = []
+
+        temps_read_ld0 = []
+
+        temps_read_ld1 = []
+
+        lockin_1st_list = []
+
+        count_values = []
+
+        actual_ghz = []
+
+        time_start_scan = datetime.now()
+
+        scantime = time_start_scan.strftime("%d-%m-%Y_%H-%M-%S")
+
+        utils.create_csv_file_scan(scantime)
+
+
+        #num_of_data_points = (stop_freq_ghz - start_freq_ghz)/(step_size_ghz)
+
+        target_ghz_list = list(range(start_freq_ghz, stop_freq_ghz + 1,step_size_ghz))
+
+        for i in range(len(target_ghz_list)):
+            ld0_temp, ld1_temp = self.calculate_temps_for_target_ghz(target_ghz_list[i])
+            ld0_temps.append(ld0_temp)
+            ld1_temps.append(ld1_temp)
+            calculated_ghz.append(self.calculate_freq_using_poly(ld0_temp,ld1_temp))
+
+
+        # Startup procedure for PB7300 
+        self.serial_commands_class.lock_in_mode()
+        self.serial_commands_class.set_LD0_Temperature(25)
+        self.serial_commands_class.set_LD1_Temperature(25)
+        time.sleep(0.02)
+        self.serial_commands_class.fan_on_high()
+        self.serial_commands_class.set_LD0_Power(self.cal_data.LD0.cal_bias)
+        self.serial_commands_class.set_LD1_Power(self.cal_data.LD1.cal_bias)
+        time.sleep(0.02)
+        self.serial_commands_class.PCS_enable()
+        time.sleep(0.02)
+        self.serial_commands_class.TEC_enable()
+        time.sleep(0.02)
+        self.serial_commands_class.set_lockin_time_constant(time_constant_ms)
+        self.serial_commands_class.set_lockin_gain(self.cal_data.gain)
+        self.serial_commands_class.lockin_enable()
+        time.sleep(0.02)
+        self.serial_commands_class.laser_bias_enable()
+
+        # Intitial stabilization
+        self.stabilize_initial(ld0_temps[0],ld0_temps[0])
+
+        for i in range(len(target_ghz_list)):
+            self.serial_commands_class.set_LD0_Temperature(ld0_temps[i])
+            self.serial_commands_class.set_LD1_Temperature(ld1_temps[i])
+            lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
+            print(f"Target freq: {target_ghz_list[i]}")
+            count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
+            print("Lock in sample count: ", count)
+            normalize_1, normalize_2 = self.normalize_lockin_scan(
+                count, lockin_1st, lockin_2nd)
+            true_ghz = self.calculate_freq_using_poly(temp_read_ld0,temp_read_ld1)
+            dwell_normalized.append(normalize_1)
+            temps_read_ld0.append(temp_read_ld0)
+            temps_read_ld1.append(temp_read_ld1)
+            lockin_1st_list.append(lockin_1st)
+            count_values.append(count)
+            actual_ghz.append(true_ghz)
+
+            info = {"Frequency": actual_ghz[i],
+                    "Power": dwell_normalized[i],}
+            
+            utils.save_to_csv_scan(info, scantime)
+
+            time.sleep(time_constant_ms/1000)
+
+        print("Dwell normalized: ",dwell_normalized)
+        print("Lockin raw: ",lockin_1st_list)
+        print("Actual ghz: ",actual_ghz)
+        print("LD0 temps: ", temps_read_ld0)
+        print("LD1 temps: ", temps_read_ld1)
+        print("Count: ", count_values)
+
+        # Shutdown sequence
+        self.serial_commands_class.set_LD0_Temperature(25)
+        self.serial_commands_class.set_LD1_Temperature(25)
+        self.serial_commands_class.TEC_disable()
+        self.serial_commands_class.fan_off()
+        self.serial_commands_class.PCS_disable()
+        self.serial_commands_class.laser_bias_disable()
+        self.serial_commands_class.lockin_disable()
+
+        utils.simple_graph(actual_ghz,dwell_normalized)
+
 
     def correct_for_target(self, actual_ghz, target_ghz):
-        """Takes the real ghz and compares to target, self corrects towards target"""
+        """Takes the real ghz and compares to target, self corrects towards target."""
 
         MAX_FREQ_DEVIATION_GHZ = 25
         CORRECTION_FACTOR_P = 0.1
@@ -340,7 +455,7 @@ class SerialDataManipulation():
         # self.dwell_control()
         time.sleep(10)
 
-    def normalize_lockin(self, count, lockin_value_1, lockin_value_2):
+    def normalize_lockin_dwell(self, count, lockin_value_1, lockin_value_2):
 
         data_sample_1st_lockin = (lockin_value_1/count)**2
         if lockin_value_2:
@@ -348,12 +463,72 @@ class SerialDataManipulation():
         else:
             data_sample_2nd_lockin = 0
         
-        if lockin_value_1 < 1:
-            lockin_value_1 = 1
-        elif lockin_value_2 < 1:
-            lockin_value_2 = 1
+        if data_sample_1st_lockin < 1:
+            data_sample_1st_lockin = 1
+        elif data_sample_2nd_lockin < 1:
+            data_sample_2nd_lockin = 1
             
         return data_sample_1st_lockin, data_sample_2nd_lockin
+    
+    def normalize_lockin_scan(self, count, lockin_value_1, lockin_value_2):
+
+        data_sample_1st_lockin = (lockin_value_1/count)**2
+        if lockin_value_2:
+            data_sample_2nd_lockin = ((lockin_value_1/count)**2)
+        else:
+            data_sample_2nd_lockin = 0
+        
+        if lockin_value_1 < self.MIN_POWER_VALUE:
+            lockin_value_1 = self.MIN_POWER_VALUE
+        elif lockin_value_2 < self.MIN_POWER_VALUE:
+            lockin_value_2 = self.MIN_POWER_VALUE
+            
+        return data_sample_1st_lockin, data_sample_2nd_lockin
+
+    def stabilize_initial(self, ld0_target_temp, ld1_target_temp):
+
+        ld0_stable = False
+        ld1_stable = False
+
+        ld0_stabilization_count = 0
+        ld1_stabilization_count = 0
+
+        self.serial_commands_class.set_LD0_Temperature(ld0_target_temp)
+        self.serial_commands_class.set_LD1_Temperature(ld1_target_temp)
+
+        stabilization_factor = self.cal_data.stablize_start_fac
+        stabilization_count = self.cal_data.stablize_start_cnt
+
+        current_ld0_temp = self.serial_commands_class.read_temp_LD0()
+        current_ld1_temp = self.serial_commands_class.read_temp_LD1()
+
+
+        while ld0_stable == False and ld1_stable == False:
+            time.sleep(0.2)
+
+            actual_ld0_temp = self.serial_commands_class.read_temp_LD0()
+            actual_ld1_temp = self.serial_commands_class.read_temp_LD1()
+
+            if actual_ld0_temp < (current_ld0_temp + stabilization_factor) and actual_ld0_temp > (current_ld0_temp - stabilization_factor):
+                ld0_stabilization_count += 1
+            else:
+                ld0_stabilization_count = 0
+
+            if ld0_stabilization_count >= stabilization_count:
+                ld0_stable = TRUE
+
+            if actual_ld1_temp < (current_ld1_temp + stabilization_factor) and actual_ld1_temp > (current_ld1_temp - stabilization_factor):
+                ld1_stabilization_count += 1
+            else:
+                ld1_stabilization_count = 0
+
+            if ld1_stabilization_count >= stabilization_count:
+                ld1_stable = TRUE
+            
+            current_ld0_temp = actual_ld0_temp
+            current_ld1_temp = actual_ld1_temp
+            
+            print(ld0_stabilization_count,ld1_stabilization_count,)
 
 
     def test_commands(self):
@@ -373,3 +548,7 @@ class SerialDataManipulation():
         print(self.cal_data.zero_cross)
         print(self.cal_data.L1_minus_L0)
         print(self.cal_data.gain)
+        print(self.cal_data.stablize_start_fac)
+        print(self.cal_data.stablize_start_cnt)
+
+        

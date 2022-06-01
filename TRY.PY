@@ -1,11 +1,11 @@
 import json
 import os
-from re import U
 import time
 import tkinter as tk
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
+import serial_data_manipulation
 
 
 jsonlist = os.listdir("calibration")
@@ -138,4 +138,20 @@ def test_behavior():
 
     #convert = int(value,16) 0 , 9 , 132 , 150 making
 
-test_behavior()
+
+def scan(start_freq_ghz, stop_freq_ghz, step_size_ghz, time_constant_ms):
+
+        freq_counter = start_freq_ghz
+
+        num_of_data_points = (stop_freq_ghz - start_freq_ghz)/(step_size_ghz)
+
+        target_ghz_list = list(range(start_freq_ghz,stop_freq_ghz + 1))
+
+        """for i in num_of_data_points:
+            freq_counter += step_size_ghz
+            target_ghz_list.append(freq_counter) """
+
+
+        print(target_ghz_list)
+
+scan(400,500,1,100)

@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import csv
 
-fieldnames = ["Time","Power"]
+fieldnames_dwell = ["Time", "Power"]
+fieldnames_scan = ["Frequency", "Power"]
+
 
 def read_json_from_file():
 
@@ -60,11 +62,23 @@ def simple_graph(x,y):
 def create_csv_file(scantime):
     
     with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
         csv_writer.writeheader()
 
 def save_to_csv(info, scantime):
 
     with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
+        csv_writer.writerow(info)
+
+def create_csv_file_scan(scantime):
+    
+    with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
+        csv_writer.writeheader()
+
+def save_to_csv_scan(info, scantime):
+
+    with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
         csv_writer.writerow(info)

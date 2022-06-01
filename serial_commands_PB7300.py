@@ -1,7 +1,6 @@
 import serial
 import serial.tools.list_ports as ports
 import time
-from collections import namedtuple
 from serial.serialutil import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 import math
 import numpy as np
@@ -292,16 +291,16 @@ class SerialCommands:
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
-            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/427.36)) - 35.13)
+            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) /self.TEMP_READ_SCALING_CONST_C)
 
-        print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
+        return temp_1_full_decimal_unscaled
 
     def read_temp_LD1(self):
         """Reads the LD1 temp"""
 
         hex_list = []
         hex_list.append("AA")
-        hex_list.append("20")
+        hex_list.append("21")
         hex_list.append("00")
         hex_list.append("00")
         hex_list.append("00")
@@ -313,9 +312,9 @@ class SerialCommands:
 
         split_hex_list = self.convert_hex_and_split_bytes(echo_temps)
 
-        temp_2_msb_hex = split_hex_list[6]
+        temp_2_msb_hex = split_hex_list[8]
 
-        temp_2_lsb_hex = split_hex_list[7]
+        temp_2_lsb_hex = split_hex_list[9]
 
         # laser 2
 
@@ -328,9 +327,7 @@ class SerialCommands:
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
-            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
-
-        print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
+            (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) /self.TEMP_READ_SCALING_CONST_C)
 
         return temp_2_full_decimal_unscaled
 
