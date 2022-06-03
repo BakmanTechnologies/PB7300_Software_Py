@@ -131,17 +131,6 @@ class SerialCommands:
         dec_value = int(hex_value, 16)
 
         return dec_value
-    
-    def int32(self, x):
-        if x>0xFFFFFFFF:
-            raise OverflowError
-        if x>0x7FFFFFFF:
-            x=int(0x100000000-x)
-            if x<2147483648:
-                return -x
-            else:
-                return -2147483648
-        return x
 
     # Serial functions ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -655,13 +644,7 @@ class SerialCommands:
         temp_2_lsb_hex = split_hex_list[9]
 
         # Bit shifting to obtain lockin value
-
-        # The following code has been added to solve a unsigned bit issue that occurs with the 8.3 firmware
-        # The 1st MSB in position 3 of incoming bytes is either x00 to signal a positive or xff to signal a negative value
-        # The bit shifting required to process the MSB and LSB results in values bigger than 32 bit integers when converted
-        # To account for this the byte is replaced with an unsigned 8 bit 0
-        # A register is created where it is 1 when 1st MSB is x00 and -1 when xff 
-        # The register is then multiplied by the final lockin value giving us a max 32 bit integer that is + or - depending on the 1st MSB
+        # Values from bytearray are 8-bit unsigned integers, they are then converted to 32-bit signed integers 
 
         unsigned_list = []
 
@@ -669,16 +652,8 @@ class SerialCommands:
         for i in range(10):
             unsigned_list.append(np.uint8(lockin_and_temps_bytes[i]))
 
-        # Register checks 1st MSB from unsigned int list, replaces (xff or 255) with 0 gives register + or - value
-        if lockin_and_temps_bytes[2] == 255:
-            unsigned_list[2] = np.uint8(0)
-            register = -1
-            print("entered")
-        else:
-            register = 1
-
-        # Bit shifting required for processing MSBs and LSBs, multiplied by register at end
-        lock_in_full_decimal_unscaled = (self.int32(unsigned_list[2]) << 24) | (self.int32(unsigned_list[3]) << 16) | (self.int32(unsigned_list[4]) << 8) | (self.int32(unsigned_list[5]))*register
+        # Bit shifting required for processing MSBs and LSBs
+        lock_in_full_decimal_unscaled = (np.int32(unsigned_list[2]) << 24) | (np.int32(unsigned_list[3]) << 16) | (np.int32(unsigned_list[4]) << 8) | (np.int32(unsigned_list[5]))
 
         # Value is scaled by X16 to undo firmware scaling
         lock_in_full_decimal_scaled = float(lock_in_full_decimal_unscaled)*16

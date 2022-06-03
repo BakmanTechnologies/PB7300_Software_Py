@@ -366,13 +366,13 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_enable()
 
         # Intitial stabilization
-        self.stabilize_initial(ld0_temps[0],ld0_temps[0])
+        self.stabilize_initial(ld0_temps[0],ld1_temps[0])
 
-        for i in range(len(target_ghz_list)):
-            self.serial_commands_class.set_LD0_Temperature(ld0_temps[i])
-            self.serial_commands_class.set_LD1_Temperature(ld1_temps[i])
+        for j in range(len(target_ghz_list)):
+            self.serial_commands_class.set_LD0_Temperature(ld0_temps[j])
+            self.serial_commands_class.set_LD1_Temperature(ld1_temps[j])
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
-            print(f"Target freq: {target_ghz_list[i]}")
+            print(f"Target freq: {target_ghz_list[j]}")
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
             print("Lock in sample count: ", count)
             normalize_1, normalize_2 = self.normalize_lockin_scan(
@@ -385,8 +385,8 @@ class SerialDataManipulation():
             count_values.append(count)
             actual_ghz.append(true_ghz)
 
-            info = {"Frequency": actual_ghz[i],
-                    "Power": dwell_normalized[i],}
+            info = {"Frequency": actual_ghz[j],
+                    "Power": dwell_normalized[j],}
             
             utils.save_to_csv_scan(info, scantime)
 
@@ -528,8 +528,15 @@ class SerialDataManipulation():
             current_ld0_temp = actual_ld0_temp
             current_ld1_temp = actual_ld1_temp
             
-            print(ld0_stabilization_count,ld1_stabilization_count,)
+            print(ld0_stabilization_count,ld1_stabilization_count)
+            print(actual_ld0_temp,actual_ld1_temp)
+        
+    def simple_stabilize(self, ld0_target_temp, ld1_target_temp):
 
+        self.serial_commands_class.set_LD0_Temperature(ld0_target_temp)
+        self.serial_commands_class.set_LD1_Temperature(ld1_target_temp)
+
+        time.sleep(1)
 
     def test_commands(self):
         # print(self.serial_commands_class.read_version())

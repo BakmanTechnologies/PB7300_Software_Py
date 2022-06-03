@@ -56,7 +56,7 @@ def simple_graph(x,y):
     # To show the plot
     #ani = FuncAnimation(plt.gcf(), animate, interval = 100)
 
-    plt.axis([0, x[-1], 10e-2, 10e8])
+    plt.axis([x[0], x[-1], 10e-2, 10e8])
     plt.show()
 
 def create_csv_file(scantime):
