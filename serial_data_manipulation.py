@@ -1,10 +1,7 @@
-from pickle import TRUE
-from numpy import double
 from serial_commands_PB7300 import SerialCommands
 import hashlib
 import time
 from datetime import datetime
-import csv
 import utils
 
 
@@ -159,6 +156,7 @@ class SerialDataManipulation():
         result = 0
 
         #LD0
+        
         ld0_coefficients = [float(self.cal_data.LD0.dwnscan_coef_seg_1[0]),
                         float(self.cal_data.LD0.dwnscan_coef_seg_1[1]),
                         float(self.cal_data.LD0.dwnscan_coef_seg_1[2]),
@@ -207,7 +205,8 @@ class SerialDataManipulation():
         return result
 
     def dwell_control(self, target_ghz: int, time_constant: int):
-        """Basic dwell function, takes a target frequency to maintain, with a time constant to keep data for noise"""
+        """Basic dwell function, takes a target frequency to maintain,
+        with a time constant to keep data for noise"""
 
         time_start_dwell = datetime.now()
         scantime = time_start_dwell.strftime("%d-%m-%Y_%H-%M-%S")
@@ -220,11 +219,14 @@ class SerialDataManipulation():
         lockin_1st_list = []
         actual_ghz = []
         count_values = []
+        laser_0_operating_current = self.cal_data.LD0.cal_bias
+        laser_1_operating_current = self.cal_data.LD1.cal_bias
 
         utils.create_csv_file(scantime)
 
 
-        # Startup procedure for PB7300 
+        # Startup procedure for PB7300
+
         ld0_temp, ld1_temp = self.calculate_temps_for_target_ghz(target_ghz)
         self.serial_commands_class.lock_in_mode()
         self.serial_commands_class.set_LD0_Temperature(ld0_temp)
@@ -557,5 +559,6 @@ class SerialDataManipulation():
         print(self.cal_data.gain)
         print(self.cal_data.stablize_start_fac)
         print(self.cal_data.stablize_start_cnt)
+        print(self.serial_commands_class.read_version())
 
         

@@ -243,7 +243,7 @@ class SerialCommands:
         temp_2_full_decimal_unscaled = (
             (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
-        #print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
+        # print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
 
     # Read temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -280,7 +280,7 @@ class SerialCommands:
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
-            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) /self.TEMP_READ_SCALING_CONST_C)
+            (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)- self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
         return temp_1_full_decimal_unscaled
 
@@ -629,7 +629,7 @@ class SerialCommands:
 
         split_hex_list = self.convert_hex_and_split_bytes(
             lockin_and_temps_bytes)
-        
+
         print("Hex bytes: ", split_hex_list)
 
 
@@ -644,11 +644,11 @@ class SerialCommands:
         temp_2_lsb_hex = split_hex_list[9]
 
         # Bit shifting to obtain lockin value
-        # Values from bytearray are 8-bit unsigned integers, they are then converted to 32-bit signed integers 
+        # Values from bytearray are 8-bit unsigned integers, they are then converted to 32-bit signed integers
 
         unsigned_list = []
 
-        # Unsigned 8bit integer list created from incoming bytearray 
+        # Unsigned 8bit integer list created from incoming bytearray
         for i in range(10):
             unsigned_list.append(np.uint8(lockin_and_temps_bytes[i]))
 
@@ -892,6 +892,8 @@ class SerialCommands:
         tx_bytes = self.build_tx_bytes(hex_list)
 
         pcs_current_bytes = self.write_serial(tx_bytes)
+
+        print(pcs_current_bytes)
 
         split_hex_list = self.convert_hex_and_split_bytes(
             pcs_current_bytes)
@@ -1179,9 +1181,7 @@ class SerialCommands:
 
         lockin_enable_hex = lockin_enable_comm.hex()
 
-        lockin_enable_dec = self.convert_hex_to_dec_values(lockin_enable_hex)
-
-        print(f"Lockin enabled")
+        print("Lockin enabled")
 
     def lockin_disable(self):
         """Disables Lock-in"""

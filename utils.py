@@ -10,10 +10,10 @@ fieldnames_scan = ["Frequency", "Power"]
 
 
 def read_json_from_file():
+    """Opens local path floder calibration and sorts them by name"""
 
     jsonlist = os.listdir("calibration")
 
-    """opens local path floder calibration and sorts them by name"""
     jsonlist.sort()
 
     if len(jsonlist) == 0:
@@ -39,6 +39,8 @@ def read_json_from_file():
     return cal_data
 
 def simple_graph(x,y):
+    """Outputs a simple graph at the of a scan or dwell"""
+
     plt.plot(x, y)
 
     plt.style.use('fivethirtyeight')
@@ -60,24 +62,28 @@ def simple_graph(x,y):
     plt.show()
 
 def create_csv_file(scantime):
+    """Creates a file with the scantime at start of dwell"""
     
     with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
         csv_writer.writeheader()
 
 def save_to_csv(info, scantime):
+    """Saves to file created for dwell, takes a dictionary info with values to save"""
 
     with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
         csv_writer.writerow(info)
 
 def create_csv_file_scan(scantime):
+    """Creates a file with the scantime at start of a scan"""
     
     with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
         csv_writer.writeheader()
 
 def save_to_csv_scan(info, scantime):
+    """Saves to file created for scan, takes a dictionary info with values to save"""
 
     with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
