@@ -832,6 +832,26 @@ class SerialCommands:
 
         print(TEC_disable_comm)
 
+    # Phase Modulation Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def PCS_enable(self, modulation_voltage : float):
+        """Enables the PCS"""
+
+        scaled_modulation_voltage = str(math.ceil(modulation_voltage*25.4))
+
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("93")
+        hex_list.append("B3")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append(scaled_modulation_voltage)
+
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        self.write_serial(tx_bytes)
+
+        print(f"Phase modulation set to {modulation_voltage}")
+
     # PCS Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def PCS_enable(self):
