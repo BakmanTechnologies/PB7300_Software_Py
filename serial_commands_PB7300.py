@@ -25,10 +25,10 @@ class SerialCommands:
         for p in PORTS:
             print(p)
         print("PB7200 Python Command Module v0.01")
-        # com_select = input("Specify COM port selection: ")
+        com_select = input("Specify COM port selection: ")
 
         # Opens serial port with set properties
-        self.PB7200COMPort.port = "COM6"
+        self.PB7200COMPort.port = com_select
         self.PB7200COMPort.baudrate = 115200
         self.PB7200COMPort.parity = PARITY_NONE
         self.PB7200COMPort.bytesize = EIGHTBITS
@@ -59,7 +59,7 @@ class SerialCommands:
 
     def write_serial(self, tx_bytes):
         """Function recieves tx_bytes list to send, returns rxBytes bytearray"""
-        #print("Writing to PB7200")
+
         self.PB7200COMPort.reset_input_buffer()
 
         # send the characterS to the device
@@ -67,21 +67,14 @@ class SerialCommands:
 
         time.sleep(0.001)
 
-        # let's wait one second before reading output (let's give device time to answer)
-        #print("Awaiting response")
-
-        #print("Bytes in buffer to read: ")
-        #print(self.PB7200COMPort.in_waiting)
-
         while self.PB7200COMPort.in_waiting > 0:
-            #print("Reading Bytes")
+            # Reading Bytes
             rx_bytes = self.PB7200COMPort.read(10)
-
-            #print(rx_bytes)
         try:
             return rx_bytes
         except UnboundLocalError as ex:
             print("No values to read")
+            print(ex)
             rx_bytes = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
             # sys.exit()
 
@@ -98,8 +91,6 @@ class SerialCommands:
         split_hex_version = [version_hex[i:i+char_count]
                              for i in range(0, len(version_hex), char_count)]
 
-        #print(split_hex_version)
-
         return split_hex_version
 
     def split_hex(self, unsplit):
@@ -110,8 +101,6 @@ class SerialCommands:
 
         split_hex_version = [unsplit[i:i+char_count]
                              for i in range(0, len(unsplit), char_count)]
-
-        #print(split_hex_version)
 
         return split_hex_version
 
@@ -132,9 +121,9 @@ class SerialCommands:
 
         return dec_value
 
-    # Serial functions ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # Serial functions
 
-    # Set temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Set temperatures ~~~~~~~~~~~~~~~~~~~~~~
     def set_LD0_Temperature(self, set_temp):
         """Sets the LD0 temperature"""
         if set_temp < 5:
@@ -245,7 +234,7 @@ class SerialCommands:
 
         # print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
 
-    # Read temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Read temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def read_temp_LD0(self):
         """Reads the LD0 temperature"""
@@ -320,7 +309,7 @@ class SerialCommands:
 
         return temp_2_full_decimal_unscaled
 
-    # Read then set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Read then set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def read_then_set_temp_LD0(self, set_temp):
         """Reads then sets the LD0 temp"""
 
@@ -690,12 +679,10 @@ class SerialCommands:
 
         return lock_in_full_decimal_scaled, temp_1_full_decimal_unscaled, temp_2_full_decimal_unscaled
 
-    # Set laser power ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Set laser power ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def set_LD0_Power(self, set_power):
         """Sets the LD0 power"""
-
-        #TEST_CURRENT = 100
 
         temp_scaled = int(set_power * self.CURRENT_REV5)
 
@@ -796,7 +783,7 @@ class SerialCommands:
 
         print(current_2_full_decimal_unscaled)
 
-    # TEC control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # TEC control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def TEC_enable(self):
         """Enables the TEC"""
@@ -832,8 +819,8 @@ class SerialCommands:
 
         print(TEC_disable_comm)
 
-    # Phase Modulation Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def PCS_enable(self, modulation_voltage : float):
+    # Phase Modulation Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    def phase_modulation_voltage_setting(self, modulation_voltage: float):
         """Enables the PCS"""
 
         scaled_modulation_voltage = str(math.ceil(modulation_voltage*25.4))
@@ -852,8 +839,7 @@ class SerialCommands:
 
         print(f"Phase modulation set to {modulation_voltage}")
 
-    # PCS Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+    # PCS Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def PCS_enable(self):
         """Enables the PCS"""
 
