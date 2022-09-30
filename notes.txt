@@ -1,5 +1,0 @@
-python -m serial.tools.miniterm --parity N --rtscts socket://169.254.56.0:23
-
-0000 0000 6800 0023 0000 
-6823
-8.1
