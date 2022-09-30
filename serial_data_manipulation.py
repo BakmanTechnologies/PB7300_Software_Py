@@ -304,7 +304,7 @@ class SerialDataManipulation():
         print("LD1 temps: ", temps_read_ld1)
         print("Count: ", count_values)
 
-        utils.simple_graph(time_table,dwell_normalized)
+        utils.simple_graph(time_table, dwell_normalized)
 
         self.close_port()
 
