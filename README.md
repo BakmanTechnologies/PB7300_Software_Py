@@ -1,5 +1,29 @@
-Created for Bakman Technologies by Ricardo Franco
 
+# PB7300 Control Software
+Created for Bakman Technologies by Ricardo Franco
+## Requirements
+
+* Windows 10
+* Python 3.8.xx
+* PB7300 Spectrum Analyzer Rev5+
+
+
+## Installation
+
+1. Create virtual environment in root directory using venv 
+
+  `python -m venv env `
+
+2. Activate virtual environment
+
+  `source env/Scripts/activate`
+
+3. Install dependencies
+
+  `pip install -r requirements.txt`
+
+
+## Overview
 This program is designed to talk to the PB7300 instrument through a RS-232 serial port
 
 It requires the factory calibration file from the unit in the /calibration folder to operate
