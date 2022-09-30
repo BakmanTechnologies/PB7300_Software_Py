@@ -630,7 +630,7 @@ class SerialDataManipulation():
                 ld0_stabilization_count = 0
 
             if ld0_stabilization_count >= stabilization_count:
-                ld0_stable = TRUE
+                ld0_stable = True
 
             if actual_ld1_temp < (current_ld1_temp + stabilization_factor) and actual_ld1_temp > (current_ld1_temp - stabilization_factor):
                 ld1_stabilization_count += 1
@@ -638,7 +638,7 @@ class SerialDataManipulation():
                 ld1_stabilization_count = 0
 
             if ld1_stabilization_count >= stabilization_count:
-                ld1_stable = TRUE
+                ld1_stable = True
             
             current_ld0_temp = actual_ld0_temp
             current_ld1_temp = actual_ld1_temp
