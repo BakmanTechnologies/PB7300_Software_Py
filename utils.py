@@ -39,6 +39,15 @@ def read_json_from_file():
     return cal_data
 
 
+def create_dir():
+    dir_list = os.listdir()
+
+    if "calibration" and "data" in dir_list:
+        pass
+    else:
+        os.mkdir("calibration")
+        os.mkdir("data")
+
 def simple_graph(x, y):
     """Outputs a simple graph at the of a scan or dwell"""
 
