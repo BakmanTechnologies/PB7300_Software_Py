@@ -637,8 +637,8 @@ class SerialDataManipulation():
             current_ld0_temp = actual_ld0_temp
             current_ld1_temp = actual_ld1_temp
             
-            print(ld0_stabilization_count,ld1_stabilization_count)
-            print(actual_ld0_temp,actual_ld1_temp)
+            print(ld0_stabilization_count, ld1_stabilization_count)
+            print(actual_ld0_temp, actual_ld1_temp)
         
     def simple_stabilize(self, ld0_target_temp, ld1_target_temp):
 
