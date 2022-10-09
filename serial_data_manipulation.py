@@ -225,7 +225,6 @@ class SerialDataManipulation():
 
         utils.create_csv_file(scantime)
 
-
         # Startup procedure for PB7300
 
         ld0_temp, ld1_temp = self.calculate_temps_for_target_ghz(target_ghz)
@@ -333,9 +332,6 @@ class SerialDataManipulation():
 
         utils.create_csv_file_scan(scantime)
 
-
-        #num_of_data_points = (stop_freq_ghz - start_freq_ghz)/(step_size_ghz)
-
         target_ghz_list = list(
             range(start_freq_ghz, stop_freq_ghz + 1, step_size_ghz))
 
@@ -418,7 +414,7 @@ class SerialDataManipulation():
         will run from start frequency to stop frequency
         saving the scan to csv in /data"""
         # TODO: does not work with step size smaller than 1
-        
+
         if 0 < modulation_voltage > 5:
             print(f"Modulation voltage must be between 0-5 volts, value is : {modulation_voltage}")
 
@@ -497,7 +493,7 @@ class SerialDataManipulation():
             info = {"Frequency": actual_ghz[j],
                     "First Harmonic": first_harmonic_normalized[j],
                     "Second Harmonic": second_harmonic_normalized[j]}
-            
+
             utils.save_to_csv_scan(info, scantime)
 
             time.sleep(time_constant_ms/1000)
@@ -546,7 +542,7 @@ class SerialDataManipulation():
             self.set_freq = target_ghz - MAX_FREQ_DEVIATION_GHZ
 
         # Laser temps are calculated to achieve new set_freq
-        ld0_corrected , ld1_corrected = self.calculate_temps_for_target_ghz(self.set_freq)
+        ld0_corrected, ld1_corrected = self.calculate_temps_for_target_ghz(self.set_freq)
 
         # Laser temp is adjusted for LD0, LD1
         self.serial_commands_class.set_LD0_Temperature(ld0_corrected)

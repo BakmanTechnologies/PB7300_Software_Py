@@ -48,6 +48,7 @@ def create_dir():
         os.mkdir("calibration")
         os.mkdir("data")
 
+
 def simple_graph(x, y):
     """Outputs a simple graph at the of a scan or dwell"""
 
