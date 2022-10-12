@@ -5,7 +5,7 @@ Created for Bakman Technologies by Ricardo Franco
 
 * Windows 10
 * Python 3.8.xx
-* PB7300 Spectrum Analyzer Rev5+
+* PB7300 Spectrometer Rev5+
 
 
 ## Installation
