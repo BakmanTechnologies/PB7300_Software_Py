@@ -31,7 +31,7 @@ class SerialDataManipulation():
 
         return json
 
-    def sha1_from_json(self, json_string):
+    def sha1_and_string_from_json(self, json_string):
         """Receives json string from EEPROM, SHA1 string and boolean
         result from SHA1 comparison"""
         print(json_string)
@@ -44,7 +44,7 @@ class SerialDataManipulation():
         sha1_calculate = hashlib.sha1(json_string_cut_bytes).hexdigest()
         sha1_calculate_cap = str.upper(sha1_calculate)
 
-        return sha1_from_eeprom, sha1_calculate_cap
+        return sha1_from_eeprom, sha1_calculate_cap, json_string_cut
 
     def check_SHA1(self, SHA1_from_EEPROM, SHA1_calculated):
         is_SHA1_ok = False
@@ -58,13 +58,15 @@ class SerialDataManipulation():
             outfile.write(json_string)
 
     def read_json_from_eeprom(self):
+        """Reads json from eeprom saves to /calibration"""
+
         json_string = self.get_json_string()
 
-        SHA1_from_EEPROM, SHA1_calculated = self.sha1_from_json(json_string)
+        SHA1_from_EEPROM, SHA1_calculated, json_string_cut = self.sha1_and_string_from_json(json_string)
 
         self.check_SHA1(SHA1_from_EEPROM, SHA1_calculated)
 
-        self.save_json_to_file(json_string, SHA1_calculated)
+        self.save_json_to_file(json_string_cut, SHA1_calculated)
 
     def close_port(self):
         self.serial_commands_class.close_port()
@@ -309,25 +311,15 @@ class SerialDataManipulation():
         # TODO: does not work with step size smaller than 1
 
         ld0_temps = []
-
         ld1_temps = []
-
         calculated_ghz = []
-
         dwell_normalized = []
-
         temps_read_ld0 = []
-
         temps_read_ld1 = []
-
         lockin_1st_list = []
-
         count_values = []
-
         actual_ghz = []
-
         time_start_scan = datetime.now()
-
         scantime = time_start_scan.strftime("%d-%m-%Y_%H-%M-%S")
 
         utils.create_csv_file_scan(scantime)
@@ -650,7 +642,7 @@ class SerialDataManipulation():
         #self.normalize_lockin(count, lockin_1st, lockin_2nd)
         # self.serial_commands_class.read_laser_currents()
 
-        self.serial_commands_class.read_pcs_current(0, 0)
+        self.serial_commands_class.read_version()
 
     def testing_imports(self):
         print(self.cal_data.LD0.upscan_coef_seg_1[1])

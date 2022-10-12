@@ -72,6 +72,8 @@ def create_csv_file(scantime):
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
         csv_writer.writeheader()
 
+    csv_file.close()
+
 
 def save_to_csv(info, scantime):
     """Saves to file created for dwell,
@@ -81,6 +83,8 @@ def save_to_csv(info, scantime):
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
         csv_writer.writerow(info)
 
+    csv_file.close()
+
 
 def create_csv_file_scan(scantime):
     """Creates a file with the scantime at start of a scan"""
@@ -88,6 +92,8 @@ def create_csv_file_scan(scantime):
     with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
         csv_writer.writeheader()
+
+    csv_file.close()
 
 
 def create_csv_file_scanpm(scantime):
@@ -98,6 +104,8 @@ def create_csv_file_scanpm(scantime):
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scanpm)
         csv_writer.writeheader()
 
+    csv_file.close()
+
 
 def save_to_csv_scan(info, scantime):
     """Saves to file created for scan,
@@ -107,6 +115,8 @@ def save_to_csv_scan(info, scantime):
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
         csv_writer.writerow(info)
 
+    csv_file.close()
+
 
 def save_to_csv_scanpm(info, scantime):
     """Saves to file created for scan,
@@ -115,3 +125,6 @@ def save_to_csv_scanpm(info, scantime):
     with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
         csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scanpm)
         csv_writer.writerow(info)
+
+    csv_file.close()
+
