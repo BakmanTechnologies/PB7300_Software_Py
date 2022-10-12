@@ -3,10 +3,14 @@ import os
 from cal_data import CalData
 import matplotlib.pyplot as plt
 import csv
+from serial_commands_PB7300 import SerialCommands
+import hashlib
 
 fieldnames_dwell = ["Time", "Power"]
 fieldnames_scan = ["Frequency", "Power"]
 fieldnames_scanpm = ["Frequency", "First Harmonic", "Second Harmonic"]
+
+serial_commands_class = SerialCommands()
 
 
 def read_json_from_file():
@@ -37,6 +41,63 @@ def read_json_from_file():
     cal_data = CalData(jsondata)
 
     return cal_data
+
+
+def get_json_string():
+    """Obtains string of the JSON calibration file in the EEPROM"""
+
+    numlist = []
+    string_json = ""
+    for i in range(4000):
+        numlist.append(serial_commands_class.read_eeprom(i))
+        if numlist[i] == "ÿ":
+            break
+        if i > 2:
+            string_json += numlist[i]
+    json = string_json
+
+    return json
+
+
+def sha1_and_string_from_json(json_string):
+    """Receives json string from EEPROM, SHA1 string and boolean
+    result from SHA1 comparison"""
+    print(json_string)
+    # Separates SHA1 from the json string,
+    # calculates new SHA1 from read json and compares the two
+    split2 = json_string.split("{", 1)
+    sha1_from_eeprom = split2[0]
+    json_string_cut = "{" + split2[1]
+    json_string_cut_bytes = bytes(str(json_string_cut).encode("ascii"))
+    sha1_calculate = hashlib.sha1(json_string_cut_bytes).hexdigest()
+    sha1_calculate_cap = str.upper(sha1_calculate)
+
+    return sha1_from_eeprom, sha1_calculate_cap, json_string_cut
+
+
+def check_SHA1(SHA1_from_EEPROM, SHA1_calculated):
+    is_SHA1_ok = False
+    if SHA1_from_EEPROM == SHA1_calculated:
+        is_SHA1_ok = True
+        print("SHA1 is valid")
+    return is_SHA1_ok
+
+
+def save_json_to_file(json_string, SHA1_calculated):
+    with open(f"calibration/{SHA1_calculated}.json", 'w') as outfile:
+        outfile.write(json_string)
+
+
+def read_json_from_eeprom():
+    """Reads json from eeprom saves to /calibration"""
+
+    json_string = get_json_string()
+
+    SHA1_from_EEPROM, SHA1_calculated, json_string_cut = sha1_and_string_from_json(json_string)
+
+    check_SHA1(SHA1_from_EEPROM, SHA1_calculated)
+
+    save_json_to_file(json_string_cut, SHA1_calculated)
 
 
 def create_dir():

@@ -24,7 +24,7 @@ class SerialCommands:
         PORTS = list(ports.comports())
         for p in PORTS:
             print(p)
-        print("PB7200 Python Command Module v0.01")
+        print("PB7300 Python Command Module v0.6")
         com_select = input("Specify COM port selection: ")
 
         # Opens serial port with set properties
