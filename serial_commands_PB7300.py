@@ -528,7 +528,7 @@ class SerialCommands:
 
         count_lsb = lockin_bytes[5]
 
-        count_full_decimal = (self.int32(count_1st_msb) << 24) | (self.int32(count_2nd_msb) << 16) | (self.int32(count_3rd_msb) << 8) | (self.int32(count_lsb))
+        count_full_decimal = (np.int32(count_1st_msb) << 24) | (np.int32(count_2nd_msb) << 16) | (np.int32(count_3rd_msb) << 8) | (np.int32(count_lsb))
 
         # second lock in
 
@@ -540,11 +540,11 @@ class SerialCommands:
 
         second_lock_in_lsb = lockin_bytes[9]
 
-        second_lock_in_full_decimal = (self.int32(second_lock_in_1st_msb) << 24) | (self.int32(second_lock_in_2nd_msb) << 16) | (self.int32(second_lock_in_3rd_msb) << 8) | (self.int32(second_lock_in_lsb))
+        second_lock_in_full_decimal = (np.int32(second_lock_in_1st_msb) << 24) | (np.int32(second_lock_in_2nd_msb) << 16) | (np.int32(second_lock_in_3rd_msb) << 8) | (np.int32(second_lock_in_lsb))
 
         return float(count_full_decimal), float(second_lock_in_full_decimal)
 
-    # Lock-in mode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Lock-in mode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def lock_in_mode(self):
         """Lock in mode is set 0 = RC filter with no flush, 1 = RC filter with flush on read, 2 = Integrate with flush on read"""
@@ -564,7 +564,7 @@ class SerialCommands:
 
         self.write_serial(tx_bytes)
 
-    # Read lock in ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Read lock in ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def read_lockin_1st_harmonic(self):
         """reads lock-in 1st harmonic"""
@@ -923,7 +923,7 @@ class SerialCommands:
 
         print(f"PCS current: {pcs_current_full_decimal_unscaled}")
 
-    # Laser Bias Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Laser Bias Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def laser_bias_enable(self):
         """Enables the laser bias"""
@@ -959,7 +959,7 @@ class SerialCommands:
 
         print("Laser bias disabled")
 
-    # Component values read ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Component values read ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def read_heatsink_temp(self):
         """Reads heatsink temperature value"""
@@ -1035,7 +1035,7 @@ class SerialCommands:
 
         print(f"Board dsp temp: {temp_dsp_full_decimal_unscaled}")
 
-    # Fan Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Fan Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def fan_on_high(self):
         """Turns the fan on to high setting"""
