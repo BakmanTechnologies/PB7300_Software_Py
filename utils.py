@@ -10,6 +10,7 @@ fieldnames_dwell = ["Time", "Power"]
 fieldnames_scan = ["Frequency", "Power"]
 fieldnames_scanpm = ["Frequency", "First Harmonic", "Second Harmonic"]
 
+
 serial_commands_class = SerialCommands()
 
 
@@ -17,6 +18,12 @@ def read_json_from_file():
     """Opens local path floder calibration and sorts them by name"""
 
     jsonlist = os.listdir("calibration")
+    dir_list = os.listdir()
+
+    if "calibration" and "data" in dir_list:
+        pass
+    else:
+        create_dir()
 
     jsonlist.sort()
 
@@ -32,11 +39,12 @@ def read_json_from_file():
         print("File exists.. Opening")
         with open(f"calibration/{recent_file_selection}") as json_file:
             jsondata = json.load(json_file)
-        # print(jsondata["CalibrationTime"])
 
     else:
         print("No calibration file exists, must read EEPROM")
-        # TODO: Make it create json from eeprom to initialize cal_data
+        file_name = read_json_from_eeprom()
+        with open(f"calibration/{file_name}.json") as json_file:
+            jsondata = json.load(json_file)
 
     cal_data = CalData(jsondata)
 
@@ -89,7 +97,7 @@ def save_json_to_file(json_string, SHA1_calculated):
 
 
 def read_json_from_eeprom():
-    """Reads json from eeprom saves to /calibration"""
+    """Reads json from eeprom saves to /calibration, returns SHA1 name of file"""
 
     json_string = get_json_string()
 
@@ -99,15 +107,14 @@ def read_json_from_eeprom():
 
     save_json_to_file(json_string_cut, SHA1_calculated)
 
+    return SHA1_from_EEPROM
+
 
 def create_dir():
-    dir_list = os.listdir()
+    """Creates /calibration and /data directories"""
 
-    if "calibration" and "data" in dir_list:
-        pass
-    else:
-        os.mkdir("calibration")
-        os.mkdir("data")
+    os.mkdir("calibration")
+    os.mkdir("data")
 
 
 def simple_graph(x, y):
