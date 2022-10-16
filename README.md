@@ -26,12 +26,11 @@ Created for Bakman Technologies by Ricardo Franco
 ## Overview
 This program is designed to talk to the PB7300 instrument through a serial port.
 
-### Initial Setup
+When running for the first time the software will check if the /calibration and /data directories exists, if not it will create them in the base directory /PB7300_Software_Py 
 
-The base file structure required to run the program must be setup.  
+The software will look in /calibration for the factory calibration file, if empty it will extract the calibration from the EEPROM memory and save it in /calibration.
 
-1. In utils.py create_dir() must be run first time to create /calibration for the calibration files, and /data for saving the data captured. 
-
+The software needs this calibration file in order to run. Modifying this file is heavily discouraged as it contains vital information for running the PB7300 Spectrometer. Any change to the values in this file may affect the performance and may even risk damaging the lasers permanently
 
 Usage:
 
