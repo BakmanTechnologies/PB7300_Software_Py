@@ -8,6 +8,11 @@ import numpy as np
 
 class SerialCommands:
     """Class containing serial port commands"""
+    # WARNING! POTENTIAL LASER DAMAGE
+    # Modifying this file is heavily discouraged as it contains vital
+    # commands for running the PB7300 Spectrometer.
+    # Any change to the commands in this file may affect the performance
+    # of the spectrometer and risk damaging the lasers permanently.
 
     PB7200COMPort = serial.Serial()
     TEMP_READ_SCALING_CONST_N = 1411.3
@@ -20,27 +25,29 @@ class SerialCommands:
     list_temperatures = []
 
     def __init__(self):
-        """Reads available com ports from windows"""
-        PORTS = list(ports.comports())
-        for p in PORTS:
-            print(p)
-        print("PB7300 Python Command Module v0.6")
-        com_select = input("Specify COM port selection: ")
+        if self.PB7200COMPort.is_open:
+            pass
+        else:
+            PORTS = list(ports.comports())
+            for p in PORTS:
+                print(p)
+            print("PB7300 Python Command Module v0.6")
+            com_select = input("Specify COM port selection: ")
 
-        # Opens serial port with set properties
-        self.PB7200COMPort.port = com_select
-        self.PB7200COMPort.baudrate = 115200
-        self.PB7200COMPort.parity = PARITY_NONE
-        self.PB7200COMPort.bytesize = EIGHTBITS
-        self.PB7200COMPort.stopbits = STOPBITS_ONE
-        self.PB7200COMPort.rtscts = True
-        self.PB7200COMPort.write_timeout = 10
+            # Opens serial port with set properties
+            self.PB7200COMPort.port = com_select
+            self.PB7200COMPort.baudrate = 115200
+            self.PB7200COMPort.parity = PARITY_NONE
+            self.PB7200COMPort.bytesize = EIGHTBITS
+            self.PB7200COMPort.stopbits = STOPBITS_ONE
+            self.PB7200COMPort.rtscts = True
+            self.PB7200COMPort.write_timeout = 10
 
-        try:
-            self.PB7200COMPort.open()
-            print("Succeded in opening PB7200 port")
-        except Exception as e:
-            print(type(e), "Failed to open port")
+            try:
+                self.PB7200COMPort.open()
+                print("Succeded in opening PB7300 port")
+            except serial.SerialException as e:
+                print("Failed to open port", e)
 
     def build_tx_bytes(self, hex_list):
         """ Builds the 6 bytes to send from a hex values list """
