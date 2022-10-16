@@ -1,6 +1,11 @@
 
 class CalData():
     """Contains all data obtained from calibration json"""
+    # WARNING! POTENTIAL LASER DAMAGE
+    # Modifying this file is heavily discouraged as it contains vital
+    # information for running the PB7300 Spectrometer.
+    # Any change to the values in this file may affect the performance
+    # of the spectrometer and risk damaging the lasers permanently.
 
     def __init__(self, calibration_data=None):
         self.calibration_time = calibration_data.get("CalibrationTime", "")
