@@ -20,14 +20,12 @@ def read_json_from_file():
     jsonlist = os.listdir("calibration")
     dir_list = os.listdir()
 
-    if "calibration" and "data" in dir_list:
-        pass
-    else:
+    if not ("calibration" and "data" in dir_list):
         create_dir()
 
     jsonlist.sort()
 
-    if len(jsonlist) == 0:
+    if not len(jsonlist):
         print("Calibration directory empty")
         recent_file_selection = "0"
     else:
@@ -56,7 +54,7 @@ def get_json_string():
 
     numlist = []
     string_json = ""
-    for i in range(4000):
+    for i in range(8000):
         numlist.append(serial_commands_class.read_eeprom(i))
         if numlist[i] == "ÿ":
             break
@@ -116,7 +114,6 @@ def create_dir():
     os.mkdir("calibration")
     os.mkdir("data")
 
-
 def simple_graph(x, y):
     """Outputs a simple graph at the of a scan or dwell"""
 
@@ -133,57 +130,30 @@ def simple_graph(x, y):
     plt.show()
 
 
-def create_csv_file(scantime):
+def create_csv_file(file_name):
     """Creates a file with the scantime at start of dwell"""
+    if "scan" in file_name:
+        field_names = fieldnames_scan
+    elif "dwell" in file_name:
+        field_names = fieldnames_dwell
 
-    with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
+    with open(f"data/{file_name}.csv", 'w') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, field_names)
         csv_writer.writeheader()
 
-    csv_file.close()
 
-
-def save_to_csv(info, scantime):
+def save_to_csv(info, file_name):
     """Saves to file created for dwell,
      takes a dictionary info with values to save"""
 
-    with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_dwell)
+    if "scan" in file_name:
+        field_names = fieldnames_scan
+    elif "dwell" in file_name:
+        field_names = fieldnames_dwell
+
+    with open(f"data/{file_name}.csv", 'a') as csv_file:
+        csv_writer = csv.DictWriter(csv_file, field_names)
         csv_writer.writerow(info)
-
-    csv_file.close()
-
-
-def create_csv_file_scan(scantime):
-    """Creates a file with the scantime at start of a scan"""
-
-    with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
-        csv_writer.writeheader()
-
-    csv_file.close()
-
-
-def create_csv_file_scanpm(scantime):
-    """Creates a file with the scantime
-     at start of a phase modulated scan"""
-
-    with open(f"data/dwelldata_{scantime}.csv", 'w') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scanpm)
-        csv_writer.writeheader()
-
-    csv_file.close()
-
-
-def save_to_csv_scan(info, scantime):
-    """Saves to file created for scan,
-     takes a dictionary info with values to save"""
-
-    with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scan)
-        csv_writer.writerow(info)
-
-    csv_file.close()
 
 
 def save_to_csv_scanpm(info, scantime):
