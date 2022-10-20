@@ -28,6 +28,7 @@ class SerialCommands:
             pass
         else:
             PORTS = list(ports.comports())
+            print("Ports Available: ")
             for p in PORTS:
                 print(p)
             print("PB7300 Python Command Module v0.6")
