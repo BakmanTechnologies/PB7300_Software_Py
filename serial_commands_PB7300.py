@@ -14,7 +14,7 @@ class SerialCommands:
     # Any change to the commands in this file may affect the performance
     # of the spectrometer and risk damaging the lasers permanently.
 
-    PB7200COMPort = serial.Serial()
+    PB7300COMPort = serial.Serial()
     TEMP_READ_SCALING_CONST_N = 1411.3
     TEMP_READ_SCALING_CONST_C = 924.023
 
@@ -22,10 +22,9 @@ class SerialCommands:
     TEMP_SET_SCALING_CONST_D = 54.08
 
     CURRENT_REV5 = 160
-    list_temperatures = []
 
     def __init__(self):
-        if self.PB7200COMPort.is_open:
+        if self.PB7300COMPort.is_open:
             pass
         else:
             PORTS = list(ports.comports())
@@ -35,16 +34,16 @@ class SerialCommands:
             com_select = input("Specify COM port selection: ")
 
             # Opens serial port with set properties
-            self.PB7200COMPort.port = com_select
-            self.PB7200COMPort.baudrate = 115200
-            self.PB7200COMPort.parity = PARITY_NONE
-            self.PB7200COMPort.bytesize = EIGHTBITS
-            self.PB7200COMPort.stopbits = STOPBITS_ONE
-            self.PB7200COMPort.rtscts = True
-            self.PB7200COMPort.write_timeout = 10
+            self.PB7300COMPort.port = com_select
+            self.PB7300COMPort.baudrate = 115200
+            self.PB7300COMPort.parity = PARITY_NONE
+            self.PB7300COMPort.bytesize = EIGHTBITS
+            self.PB7300COMPort.stopbits = STOPBITS_ONE
+            self.PB7300COMPort.rtscts = True
+            self.PB7300COMPort.write_timeout = 10
 
             try:
-                self.PB7200COMPort.open()
+                self.PB7300COMPort.open()
                 print("Succeded in opening PB7300 port")
             except serial.SerialException as e:
                 print("Failed to open port", e)
@@ -67,16 +66,16 @@ class SerialCommands:
     def write_serial(self, tx_bytes):
         """Function recieves tx_bytes list to send, returns rxBytes bytearray"""
 
-        self.PB7200COMPort.reset_input_buffer()
+        self.PB7300COMPort.reset_input_buffer()
 
         # send the characterS to the device
-        self.PB7200COMPort.write(tx_bytes)
+        self.PB7300COMPort.write(tx_bytes)
 
         time.sleep(0.001)
 
-        while self.PB7200COMPort.in_waiting > 0:
+        while self.PB7300COMPort.in_waiting > 0:
             # Reading Bytes
-            rx_bytes = self.PB7200COMPort.read(10)
+            rx_bytes = self.PB7300COMPort.read(10)
         try:
             return rx_bytes
         except UnboundLocalError as ex:
@@ -87,7 +86,7 @@ class SerialCommands:
 
     def close_port(self):
         """Closes com port at end of program"""
-        self.PB7200COMPort.close()
+        self.PB7300COMPort.close()
 
     def convert_hex_and_split_bytes(self, unsplit):
         """Converts bytes to hex list"""
@@ -103,8 +102,6 @@ class SerialCommands:
     def split_hex(self, unsplit):
         """splits hex string every 2 chars to list"""
         char_count = 2
-
-        print("Raw Bytes: ", unsplit)
 
         split_hex_version = [unsplit[i:i+char_count]
                              for i in range(0, len(unsplit), char_count)]
@@ -184,8 +181,6 @@ class SerialCommands:
         temp_1_full_decimal_unscaled = (
             (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
 
-        #print(f"Laser 0 temp: {temp_1_full_decimal_unscaled}")
-
     def set_LD1_Temperature(self, set_temp):
         """Sets the LD1 temperature"""
 
@@ -238,8 +233,6 @@ class SerialCommands:
 
         temp_2_full_decimal_unscaled = (
             (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)/self.TEMP_SET_SCALING_CONST_L)) - self.TEMP_SET_SCALING_CONST_D)
-
-        # print(f"Laser 1 temp: {temp_2_full_decimal_unscaled}")
 
     # Read temperatures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -367,8 +360,6 @@ class SerialCommands:
         temp_1_full_decimal_unscaled = (
             (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)/self.TEMP_READ_SCALING_CONST_N)) - self.TEMP_READ_SCALING_CONST_C)
 
-        print(f"Laser 2 temp: {temp_1_full_decimal_unscaled}")
-
     def read_then_set_temp_LD1(self, set_temp):
         """Reads the LD1 temp"""
 
@@ -417,8 +408,6 @@ class SerialCommands:
 
         temp_2_full_decimal_unscaled = (
             (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
-
-        print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
 
     def read_then_set_temp_LD0_and_LD1(self, set_temp_ld0, set_temp_ld1):
         """Reads the LD1 temp"""
@@ -506,9 +495,6 @@ class SerialCommands:
             (((((2**8) * temp_2_msb_decimal_float) +
              temp_2_lsb_decimal_float)/self.TEMP_READ_SCALING_CONST_N))
             - self.TEMP_READ_SCALING_CONST_C)
-
-        print(
-            f"Laser 1 temp: {temp_1_full_decimal_unscaled} Laser 2 temp: {temp_2_full_decimal_unscaled}")
 
     def read_sample_count_second_lockin_output(self):
         """reads lock-in 1st harmonic"""
@@ -606,8 +592,6 @@ class SerialCommands:
 
         lock_in_full_decimal = f"{lock_in_msb_full_decimal}.{lock_in_lsb_full_decimal}"
 
-        print(lock_in_full_decimal)
-
     def read_lockin_1st_and_both_temps(self):
         """Reads lock-in 1st harmonic, LD0 temp, LD1 temp"""
 
@@ -625,9 +609,6 @@ class SerialCommands:
 
         split_hex_list = self.convert_hex_and_split_bytes(
             lockin_and_temps_bytes)
-
-        print("Hex bytes: ", split_hex_list)
-
 
         #Temperature bytes do not require bitwise operations
 
@@ -680,10 +661,6 @@ class SerialCommands:
         temp_2_full_decimal_unscaled = (
             (((((2**8) * temp_2_msb_decimal_float)+temp_2_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
-        #print(f"Lock in output: {lock_in_full_decimal_scaled}")
-        #print(f"Laser 1 temp: {temp_1_full_decimal_unscaled}")
-        #print(f"Laser 2 temp: {temp_2_full_decimal_unscaled}")
-
         return lock_in_full_decimal_scaled, temp_1_full_decimal_unscaled, temp_2_full_decimal_unscaled
 
     # Set laser power ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -734,8 +711,6 @@ class SerialCommands:
 
         current_1_full_decimal_unscaled = (
             (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.CURRENT_REV5)
-
-        print(current_1_full_decimal_unscaled)
 
     def set_LD1_Power(self, set_power):
         """Sets the LD1 power"""
@@ -788,8 +763,6 @@ class SerialCommands:
         current_2_full_decimal_unscaled = (
             (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.CURRENT_REV5)
 
-        print(current_2_full_decimal_unscaled)
-
     # TEC control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def TEC_enable(self):
@@ -807,8 +780,6 @@ class SerialCommands:
 
         TEC_enable_comm = self.write_serial(tx_bytes)
 
-        print(TEC_enable_comm)
-
     def TEC_disable(self):
         """Disables the TEC"""
 
@@ -823,8 +794,6 @@ class SerialCommands:
         tx_bytes = self.build_tx_bytes(hex_list)
 
         TEC_disable_comm = self.write_serial(tx_bytes)
-
-        print(TEC_disable_comm)
 
     # Phase Modulation Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def phase_modulation_voltage_setting(self, modulation_voltage: float):
@@ -862,8 +831,6 @@ class SerialCommands:
 
         PCS_enable_command = self.write_serial(tx_bytes)
 
-        print(PCS_enable_command)
-
     def PCS_disable(self):
         """Disables the PCS"""
 
@@ -878,8 +845,6 @@ class SerialCommands:
         tx_bytes = self.build_tx_bytes(hex_list)
 
         PCS_disable_command = self.write_serial(tx_bytes)
-
-        print(PCS_disable_command)
 
     def read_pcs_current(self, channel, source_or_detector):
         """Reads dsp temperature value"""
@@ -906,8 +871,6 @@ class SerialCommands:
 
         pcs_current_bytes = self.write_serial(tx_bytes)
 
-        print(pcs_current_bytes)
-
         split_hex_list = self.convert_hex_and_split_bytes(
             pcs_current_bytes)
 
@@ -928,8 +891,6 @@ class SerialCommands:
         pcs_current_full_decimal_unscaled = (
             ((((2**8) * pcs_current_msb_decimal_float)+pcs_current_lsb_decimal_float)/32))
 
-        print(f"PCS current: {pcs_current_full_decimal_unscaled}")
-
     # Laser Bias Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def laser_bias_enable(self):
@@ -947,8 +908,6 @@ class SerialCommands:
 
         self.write_serial(tx_bytes)
 
-        print("Laser bias enabled")
-
     def laser_bias_disable(self):
         """Disables the laser bias"""
 
@@ -963,8 +922,6 @@ class SerialCommands:
         tx_bytes = self.build_tx_bytes(hex_list)
 
         self.write_serial(tx_bytes)
-
-        print("Laser bias disabled")
 
     # Component values read ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1003,8 +960,6 @@ class SerialCommands:
         temp_heatsink_full_decimal_unscaled = (
             (((((2**8) * temp_heatsink_msb_decimal_float)+temp_heatsink_lsb_decimal_float)/427.36)) - 35.13)
 
-        print(f"Board heatsink temp: {temp_heatsink_full_decimal_unscaled}")
-
     def read_dsp_temp(self):
         """Reads dsp temperature value"""
 
@@ -1040,8 +995,6 @@ class SerialCommands:
         temp_dsp_full_decimal_unscaled = (
             (((((2**8) * temp_dsp_msb_decimal_float)+temp_dsp_lsb_decimal_float)/427.36)) - 35.13)
 
-        print(f"Board dsp temp: {temp_dsp_full_decimal_unscaled}")
-
     # Fan Control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def fan_on_high(self):
@@ -1067,12 +1020,28 @@ class SerialCommands:
         fan_state_and_speed_decimal = self.convert_hex_to_dec(
             fan_state_and_speed_hex)
 
-        fan_state_decimal = fan_state_and_speed_decimal[8]
+    def fan_on_low(self):
+        """Turns the fan on to high setting"""
 
-        fan_speed_decimal = fan_state_and_speed_decimal[9]
+        hex_list = []
+        hex_list.append("AA")
+        hex_list.append("C4")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("00")
+        hex_list.append("01")
 
-        print(
-            f"Fan state is : {fan_state_decimal} and speed is: {fan_speed_decimal}")
+        tx_bytes = self.build_tx_bytes(hex_list)
+
+        print("Turning fan on....")
+
+        fan_state_and_speed_bytes = self.write_serial(tx_bytes)
+
+        fan_state_and_speed_hex = self.convert_hex_and_split_bytes(
+            fan_state_and_speed_bytes)
+
+        fan_state_and_speed_decimal = self.convert_hex_to_dec(
+            fan_state_and_speed_hex)
 
     def fan_off(self):
         """Turns the fan off"""
@@ -1155,15 +1124,11 @@ class SerialCommands:
 
         tx_bytes = self.build_tx_bytes(hex_list)
 
-        print(tx_bytes)
-
         version_bytes = self.write_serial(tx_bytes)
 
         split_hex_list = self.convert_hex_and_split_bytes(version_bytes)
 
         converted_list = self.convert_hex_to_dec(split_hex_list)
-
-        print(converted_list)
 
         version_first_half = str(converted_list[8])
 
@@ -1333,9 +1298,6 @@ class SerialCommands:
 
         temp_2_full_decimal_scaled = (temp_2_full_decimal_unscaled/80)
 
-        print(f"Laser 1 Bias Current: {temp_1_full_decimal_scaled}")
-        print(f"Laser 2 Bias Current: {temp_2_full_decimal_scaled}")
-
     # Lock in time constant ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def set_lockin_time_constant(self, set_time):
@@ -1385,8 +1347,6 @@ class SerialCommands:
         time_full_decimal_unscaled = (
             (((2**8) * time_msb_decimal_float)+time_lsb_decimal_float)*3)
 
-        print(f"Lock in time constants: {time_full_decimal_unscaled}")
-
     # Set lock in gain ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def set_lockin_gain(self, gain):
         """Sets the lockin gain"""
@@ -1412,6 +1372,7 @@ class SerialCommands:
         print(f"Lockin gain set to: {lockin_gain_dec}")
 
     def write_EEPROM(self, address, value):
+        # Untested, should not use
 
         split_address = float(math.floor(address/256))
         modded_address = float(address % 256)
@@ -1427,8 +1388,6 @@ class SerialCommands:
         tx_bytes = self.build_tx_bytes(hex_list)
 
         self.write_serial(tx_bytes)
-
-        print("Wrote to the EEPROM")
 
     def read_eeprom(self, address):
         """Reads the eemprom 1 memory address at a time and returns a char"""
