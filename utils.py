@@ -69,7 +69,7 @@ def get_json_string():
 def sha1_and_string_from_json(json_string):
     """Receives json string from EEPROM, SHA1 string and boolean
     result from SHA1 comparison"""
-    #print(json_string)
+    # print(json_string)
     # Separates SHA1 from the json string,
     # calculates new SHA1 from read json and compares the two
     split2 = json_string.split("{", 1)
@@ -115,6 +115,7 @@ def create_dir():
     os.mkdir("calibration")
     os.mkdir("data")
 
+
 def simple_graph(x, y):
     """Outputs a simple graph at the of a scan or dwell"""
 
@@ -143,8 +144,6 @@ def create_csv_file(file_name):
         if "pm" in file_name:
             field_names = fieldnames_dwellpm
 
-    print(field_names)
-
     with open(f"data/{file_name}.csv", 'w') as csv_file:
         csv_writer = csv.DictWriter(csv_file, field_names)
         csv_writer.writeheader()
@@ -164,8 +163,6 @@ def save_to_csv(info, file_name):
         field_names = fieldnames_dwell
         if "pm" in file_name:
             field_names = fieldnames_dwellpm
-
-    print(field_names)
 
     with open(f"data/{file_name}.csv", 'a') as csv_file:
         csv_writer = csv.DictWriter(csv_file, field_names)

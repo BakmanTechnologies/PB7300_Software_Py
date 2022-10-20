@@ -169,8 +169,8 @@ class SerialDataManipulation():
         return result
 
     def dwell(self, target_ghz: int, time_constant: int, number_of_data_points: int) -> None:
-        """Basic dwell function, takes a target frequency to maintain,
-        with a time constant to tell the intrument the speed at which
+        """Dwell function, takes a target frequency to maintain,
+        with a time constant to send the PB7300 the speed at which
         it will be polled for data and the number of data points to take"""
         if not self.check_ghz_range_limit(target_ghz):
             return None
@@ -256,22 +256,14 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_disable()
         self.serial_commands_class.lockin_disable()
 
-        # print("Time: ", time_table)
-        # print("Dwell normalized: ", dwell_normalized)
-        # print("Lockin raw: ", lockin_1st_list)
-        print("Actual ghz: ", actual_ghz)
-        # print("LD0 temps: ", temps_read_ld0)
-        # print("LD1 temps: ", temps_read_ld1)
-        # print("Count: ", count_values)
-
         utils.simple_graph(time_table, dwell_normalized)
 
         self.close_port()
 
     def dwellpm(self, target_ghz: int, time_constant: int, number_of_data_points: int, modulation_voltage: float) -> None:
-        """Basic dwell function, takes a target frequency to maintain,
+        """Dwell function, takes a target frequency to maintain,
         with a time constant to tell the intrument the speed at which
-        it will be polled for data and the number of data points to take"""
+        it will be polled for data, and the number of data points to take"""
         if not self.check_ghz_range_limit(target_ghz):
             return None
         
@@ -358,21 +350,15 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_disable()
         self.serial_commands_class.lockin_disable()
 
-        # print("Time: ", time_table)
-        # print("Dwell normalized: ", dwell_normalized)
-        # print("Lockin raw: ", lockin_1st_list)
-        print("Actual ghz: ", actual_ghz)
-        # print("LD0 temps: ", temps_read_ld0)
-        # print("LD1 temps: ", temps_read_ld1)
-        # print("Count: ", count_values)
-
-        utils.simple_graph(time_table, dwell_normalized)
+        utils.simple_graph(time_table, first_harmonic_normalized)
 
         self.close_port()
 
     def scan(self, start_freq_ghz: int, stop_freq_ghz: int, step_size_ghz: int, time_constant_ms: int):
-        """Basic scan function, takes start frequency, stop frequency, step size and time constant,
-        will run from start frequency to stop frequency saving the scan to csv in /scan"""
+        """Scan function, takes start frequency,
+        stop frequency, step size and time constant,
+        will run from start frequency to stop frequency
+        and back saving the scan to csv in /scan"""
         # TODO: does not work with step size smaller than 1
 
         if not self.check_ghz_range_limit(start_freq_ghz):
@@ -458,7 +444,7 @@ class SerialDataManipulation():
             # temps_read_ld0.append(temp_read_ld0)
             # temps_read_ld1.append(temp_read_ld1)
             lockin_1st_list.append(lockin_1st)
-            #count_values.append(count)
+            # count_values.append(count)
             actual_ghz.append(true_ghz)
 
             info = {"Frequency": actual_ghz[j],
@@ -494,13 +480,6 @@ class SerialDataManipulation():
 
             time.sleep(time_constant_ms/1000)
 
-        #print("Dwell normalized: ", lockin_1st_list)
-        print("Lockin Normalized: ", lockin_1st_normalized)
-        print("Actual ghz: ", actual_ghz)
-        #print("LD0 temps: ", temps_read_ld0)
-        #print("LD1 temps: ", temps_read_ld1)
-        #print("Count: ", count_values)
-
         # Shutdown sequence
         self.serial_commands_class.set_LD0_Temperature(25)
         self.serial_commands_class.set_LD1_Temperature(25)
@@ -514,12 +493,11 @@ class SerialDataManipulation():
 
         return actual_ghz, lockin_1st_normalized
 
-    # Phase Modulation
     def scan_pm(self, start_freq_ghz: int, stop_freq_ghz: int, step_size_ghz: int, time_constant_ms: int, modulation_voltage: float):
-        """Basic scan function, takes start frequency,
-        stop frequency, step size and time constant,
-        will run from start frequency to stop frequency
-        saving the scan to csv in /data"""
+        """Scan function, takes start frequency,
+        stop frequency, step size, time constant,
+        and modulation volatage, will run from start
+        frequency to stop frequency saving the scan to csv in /data"""
         # TODO: does not work with step size smaller than 1
 
         if 0 > modulation_voltage > 5:
@@ -651,13 +629,6 @@ class SerialDataManipulation():
             utils.save_to_csv(info, file_name)
 
             time.sleep(time_constant_ms/1000)
-
-        #print("Dwell normalized: ", lockin_1st_list)
-        print("Lockin Normalized: ", lockin_1st_normalized)
-        print("Actual ghz: ", actual_ghz)
-        #print("LD0 temps: ", temps_read_ld0)
-        #print("LD1 temps: ", temps_read_ld1)
-        #print("Count: ", count_values)
 
         # Shutdown sequence
         self.serial_commands_class.set_LD0_Temperature(25)
