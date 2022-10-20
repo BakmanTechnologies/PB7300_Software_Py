@@ -8,6 +8,7 @@ import hashlib
 
 fieldnames_dwell = ["Time", "Power"]
 fieldnames_scan = ["Frequency", "Power"]
+fieldnames_dwellpm = ["Time", "First Harmonic", "Second Harmonic"]
 fieldnames_scanpm = ["Frequency", "First Harmonic", "Second Harmonic"]
 
 
@@ -68,7 +69,7 @@ def get_json_string():
 def sha1_and_string_from_json(json_string):
     """Receives json string from EEPROM, SHA1 string and boolean
     result from SHA1 comparison"""
-    print(json_string)
+    #print(json_string)
     # Separates SHA1 from the json string,
     # calculates new SHA1 from read json and compares the two
     split2 = json_string.split("{", 1)
@@ -134,8 +135,15 @@ def create_csv_file(file_name):
     """Creates a file with the scantime at start of dwell"""
     if "scan" in file_name:
         field_names = fieldnames_scan
-    elif "dwell" in file_name:
+        if "pm" in file_name:
+            field_names = fieldnames_scanpm
+
+    if "dwell" in file_name:
         field_names = fieldnames_dwell
+        if "pm" in file_name:
+            field_names = fieldnames_dwellpm
+
+    print(field_names)
 
     with open(f"data/{file_name}.csv", 'w') as csv_file:
         csv_writer = csv.DictWriter(csv_file, field_names)
@@ -145,24 +153,20 @@ def create_csv_file(file_name):
 def save_to_csv(info, file_name):
     """Saves to file created for dwell,
      takes a dictionary info with values to save"""
+    print(file_name)
 
     if "scan" in file_name:
         field_names = fieldnames_scan
-    elif "dwell" in file_name:
+        if "pm" in file_name:
+            field_names = fieldnames_scanpm
+
+    if "dwell" in file_name:
         field_names = fieldnames_dwell
+        if "pm" in file_name:
+            field_names = fieldnames_dwellpm
+
+    print(field_names)
 
     with open(f"data/{file_name}.csv", 'a') as csv_file:
         csv_writer = csv.DictWriter(csv_file, field_names)
         csv_writer.writerow(info)
-
-
-def save_to_csv_scanpm(info, scantime):
-    """Saves to file created for scan,
-     takes a dictionary info with values to save"""
-
-    with open(f"data/dwelldata_{scantime}.csv", 'a') as csv_file:
-        csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames_scanpm)
-        csv_writer.writerow(info)
-
-    csv_file.close()
-
