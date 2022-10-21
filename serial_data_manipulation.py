@@ -168,7 +168,7 @@ class SerialDataManipulation():
 
         return result
 
-    def dwell(self, target_ghz: int, time_constant: int, number_of_data_points: int) -> None:
+    def dwell(self, target_ghz: int, time_constant: int, number_of_data_points: int):
         """Dwell function, takes a target frequency to maintain,
         with a time constant to send the PB7300 the speed at which
         it will be polled for data and the number of data points to take"""
@@ -258,15 +258,15 @@ class SerialDataManipulation():
 
         utils.simple_graph(time_table, dwell_normalized)
 
-        self.close_port()
+        return time_table, dwell_normalized
 
-    def dwell_pm(self, target_ghz: int, time_constant: int, number_of_data_points: int, modulation_voltage: float) -> None:
+    def dwell_pm(self, target_ghz: int, time_constant: int, number_of_data_points: int, modulation_voltage: float):
         """Dwell function, takes a target frequency to maintain,
         with a time constant to tell the intrument the speed at which
         it will be polled for data, and the number of data points to take"""
         if not self.check_ghz_range_limit(target_ghz):
             return None
-        
+
         if self.cal_data.phase_modulator_installed:
             self.serial_commands_class.phase_modulation_voltage_setting(modulation_voltage)
             print("Modulating!!")
@@ -352,7 +352,7 @@ class SerialDataManipulation():
 
         utils.simple_graph(time_table, first_harmonic_normalized)
 
-        self.close_port()
+        return time_table, first_harmonic_normalized, second_harmonic_normalized
 
     def scan(self, start_freq_ghz: int, stop_freq_ghz: int, step_size_ghz: int, time_constant_ms: int):
         """Scan function, takes start frequency,
