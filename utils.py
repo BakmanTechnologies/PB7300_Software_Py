@@ -17,13 +17,12 @@ serial_commands_class = SerialCommands()
 
 def read_json_from_file():
     """Opens local path floder calibration and sorts them by name"""
-
-    jsonlist = os.listdir("calibration")
     dir_list = os.listdir()
 
     if not ("calibration" and "data" in dir_list):
         create_dir()
 
+    jsonlist = os.listdir("calibration")
     jsonlist.sort()
 
     if not len(jsonlist):
