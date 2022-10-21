@@ -359,7 +359,6 @@ class SerialDataManipulation():
         stop frequency, step size and time constant,
         will run from start frequency to stop frequency
         and back saving the scan to csv in /scan"""
-        # TODO: does not work with step size smaller than 1
 
         if not self.check_ghz_range_limit(start_freq_ghz):
             return None
@@ -512,7 +511,6 @@ class SerialDataManipulation():
         stop frequency, step size, time constant,
         and modulation volatage, will run from start
         frequency to stop frequency saving the scan to csv in /data"""
-        # TODO: does not work with step size smaller than 1
 
         if 0 > modulation_voltage > 5:
             print(f"Modulation voltage must be between 0-5 volts, value is : {modulation_voltage}")
