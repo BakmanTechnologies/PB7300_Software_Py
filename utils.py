@@ -152,7 +152,6 @@ def create_csv_file(file_name):
 def save_to_csv(info, file_name):
     """Saves to file created for dwell,
      takes a dictionary info with values to save"""
-    print(file_name)
 
     if "scan" in file_name:
         field_names = fieldnames_scan

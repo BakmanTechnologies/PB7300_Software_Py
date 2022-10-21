@@ -221,7 +221,7 @@ class SerialDataManipulation():
 
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
 
-            print("Lock in sample count: ", count)
+            #print("Lock in sample count: ", count)
 
             normalize_1, normalize_2 = self.normalize_lockin_dwell(
                 count, lockin_1st, lockin_2nd)
@@ -260,7 +260,7 @@ class SerialDataManipulation():
 
         self.close_port()
 
-    def dwellpm(self, target_ghz: int, time_constant: int, number_of_data_points: int, modulation_voltage: float) -> None:
+    def dwell_pm(self, target_ghz: int, time_constant: int, number_of_data_points: int, modulation_voltage: float) -> None:
         """Dwell function, takes a target frequency to maintain,
         with a time constant to tell the intrument the speed at which
         it will be polled for data, and the number of data points to take"""
@@ -316,7 +316,7 @@ class SerialDataManipulation():
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print("Time Stamp: ", elapsed_time)
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
-            print("Lock in sample count: ", count)
+            # print("Lock in sample count: ", count)
             normalize_1, normalize_2 = self.normalize_lockin_dwell(
                 count, lockin_1st, lockin_2nd)
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1)
