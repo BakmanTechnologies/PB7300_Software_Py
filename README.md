@@ -38,22 +38,24 @@ serial_data_manipulation.py requires an instance of cal_data to work
 
 cal_data can be populated by read_json_from_file() from utils.py
 
-read_json_from_file() needs a calibration file from the PB7300 in /calibration to work
 
 
-Main functions
+
+### Main functions
 
 Dwell 
+`dwell()`
 
-dwell_control()
-
+Sets a target frequency in GHz and mantains it for a given amount of data points to take.
 
 Scan
+`scan()`
 
-scan()
+Scans in a set range of GHz from start to stop and back once.
 
+Phase Modulation
 
-Phase Modulated Scan
+`scan_pm()`
+`dwell_pm()`
 
-scan_pm()
-
+These funcions work the same as their non modulated counterparts they simply turn on the phase modulation in the PB7300 before it starts to operate.
