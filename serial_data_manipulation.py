@@ -168,7 +168,7 @@ class SerialDataManipulation():
 
         return result
 
-    def dwell(self, target_ghz: int, time_constant: int, number_of_data_points: int):
+    def dwell(self, target_ghz: float, time_constant: int, number_of_data_points: int):
         """Dwell function, takes a target frequency to maintain,
         with a time constant to send the PB7300 the speed at which
         it will be polled for data and the number of data points to take"""
@@ -260,7 +260,7 @@ class SerialDataManipulation():
 
         return time_table, dwell_normalized
 
-    def dwell_pm(self, target_ghz: int, time_constant: int, number_of_data_points: int, modulation_voltage: float):
+    def dwell_pm(self, target_ghz: float, time_constant: int, number_of_data_points: int, modulation_voltage: float):
         """Dwell function, takes a target frequency to maintain,
         with a time constant to tell the intrument the speed at which
         it will be polled for data, and the number of data points to take"""
@@ -354,7 +354,7 @@ class SerialDataManipulation():
 
         return time_table, first_harmonic_normalized, second_harmonic_normalized
 
-    def scan(self, start_freq_ghz: int, stop_freq_ghz: int, step_size_ghz: int, time_constant_ms: int):
+    def scan(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int):
         """Scan function, takes start frequency,
         stop frequency, step size and time constant,
         will run from start frequency to stop frequency
@@ -386,8 +386,14 @@ class SerialDataManipulation():
 
         utils.create_csv_file(file_name)
 
-        target_ghz_list = list(
-            range(start_freq_ghz, stop_freq_ghz + 1, step_size_ghz))
+        start_mhz = int(start_freq_ghz*1000)
+        stop_mhz = int(stop_freq_ghz*1000)
+        step_size_mhz = int(step_size_ghz*1000)
+        target_ghz_list = list(range(start_mhz, stop_mhz + 1, step_size_mhz))
+
+        for i in range(len(target_ghz_list)):
+            print(i)
+            target_ghz_list[i] = target_ghz_list[i]/1000
 
         # Calculates up temps
         for i in range(len(target_ghz_list)):
@@ -429,6 +435,10 @@ class SerialDataManipulation():
         # Intitial stabilization
         self.stabilize_initial(ld0_temps_up[0], ld1_temps_up[0])
 
+        #Clear count before read
+        self.serial_commands_class.read_lockin_1st_and_both_temps()
+        self.serial_commands_class.read_sample_count_second_lockin_output()
+
         # Up scan
         for j in range(len(target_ghz_list)):
             self.serial_commands_class.set_LD0_Temperature(ld0_temps_up[j])
@@ -457,6 +467,10 @@ class SerialDataManipulation():
         # Down Scan
 
         self.stabilize_initial(ld0_temps_down[-1], ld1_temps_down[-1])
+
+        #Clear count before read
+        self.serial_commands_class.read_lockin_1st_and_both_temps()
+        self.serial_commands_class.read_sample_count_second_lockin_output()
 
         for k in reversed(range(len(target_ghz_list))):
             self.serial_commands_class.set_LD0_Temperature(ld0_temps_down[k])
@@ -493,7 +507,7 @@ class SerialDataManipulation():
 
         return actual_ghz, lockin_1st_normalized
 
-    def scan_pm(self, start_freq_ghz: int, stop_freq_ghz: int, step_size_ghz: int, time_constant_ms: int, modulation_voltage: float):
+    def scan_pm(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, modulation_voltage: float):
         """Scan function, takes start frequency,
         stop frequency, step size, time constant,
         and modulation volatage, will run from start
@@ -532,8 +546,13 @@ class SerialDataManipulation():
 
         utils.create_csv_file(file_name)
 
-        target_ghz_list = list(
-            range(start_freq_ghz, stop_freq_ghz + 1, step_size_ghz))
+        start_mhz = int(start_freq_ghz*1000)
+        stop_mhz = int(stop_freq_ghz*1000)
+        step_size_mhz = int(step_size_ghz*1000)
+        target_ghz_list = list(range(start_mhz, stop_mhz + 1, step_size_mhz))
+
+        for i in range(len(target_ghz_list)):
+            target_ghz_list[i] = target_ghz_list[i]/1000
 
         # Calculates up temps
         for i in range(len(target_ghz_list)):
@@ -575,6 +594,10 @@ class SerialDataManipulation():
         # Intitial stabilization
         self.stabilize_initial(ld0_temps_up[0], ld1_temps_up[0])
 
+        #Clear count before read
+        self.serial_commands_class.read_lockin_1st_and_both_temps()
+        self.serial_commands_class.read_sample_count_second_lockin_output()
+
         # Up scan
         for j in range(len(target_ghz_list)):
             self.serial_commands_class.set_LD0_Temperature(ld0_temps_up[j])
@@ -605,6 +628,10 @@ class SerialDataManipulation():
         # Down Scan
 
         self.stabilize_initial(ld0_temps_down[-1], ld1_temps_down[-1])
+
+        #Clear count before read
+        self.serial_commands_class.read_lockin_1st_and_both_temps()
+        self.serial_commands_class.read_sample_count_second_lockin_output()
 
         for k in reversed(range(len(target_ghz_list))):
             self.serial_commands_class.set_LD0_Temperature(ld0_temps_down[k])
