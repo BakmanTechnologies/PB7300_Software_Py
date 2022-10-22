@@ -29,9 +29,7 @@ def read_json_from_file():
         print("Calibration directory empty")
         recent_file_selection = "0"
     else:
-        print(len(jsonlist))
         recent_file_selection = jsonlist[-1]
-        print(recent_file_selection)
 
     if os.path.exists(f"calibration/{recent_file_selection}"):
         print("File exists.. Opening")

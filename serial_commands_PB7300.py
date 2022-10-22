@@ -1370,8 +1370,6 @@ class SerialCommands:
 
         lockin_gain_dec = self.convert_hex_to_dec_values(lockin_gain_hex)
 
-        print(f"Lockin gain set to: {lockin_gain_dec}")
-
     def write_EEPROM(self, address, value):
         # Untested, should not use
 
