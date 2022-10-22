@@ -23,6 +23,8 @@ class SerialCommands:
 
     CURRENT_REV5 = 160
 
+    COM_PORT = "COM0"
+
     def __init__(self):
         if self.PB7300COMPort.is_open:
             pass
@@ -1070,9 +1072,6 @@ class SerialCommands:
         fan_state_decimal = fan_state_and_speed_decimal[8]
 
         fan_speed_decimal = fan_state_and_speed_decimal[9]
-
-        print(
-            f"Fan state is : {fan_state_decimal} and speed is: {fan_speed_decimal}")
 
     # LED control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
