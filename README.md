@@ -65,7 +65,7 @@ Contains helper functions for setting up and using the script. Creates file dire
 
 ## Main functions
 
-# Dwell 
+### Dwell 
 `dwell(self, target_ghz: float, time_constant: int, number_of_data_points: int):`
 
 Sets a target frequency in GHz and mantains it for a given amount of data points to take. Returns list of time stamps (seconds) and lockin power readings (arb).
@@ -78,7 +78,7 @@ number_of_data_points: Amount of data points to be saved, dwell ends when value 
 
 
 
-# Scan
+### Scan
 `scan(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, only_up: Boolean = False):`
 
 Scans in a set range of GHz from start to stop and back once. Returns list of frequencies (GHz) and and lockin power readings (arb).
@@ -100,13 +100,15 @@ Phase Modulation
 These funcions work the same as their non modulated counterparts they simply turn on the phase modulation in the PB7300 before it starts to operate.
 
 ## Usage
-The script can be run on its own by using the main.py included in the repo, the first time running the script should look like this:
+The script can be run on its own by using the main.py included in the repo, the first time running the script main should look like this:
 
 `cal_data = read_json_from_file()`
 
 `serial_data_manipulation = SerialDataManipulation(cal_data)`
 
 `serial_data_manipulation.display_system_info()`
+
+`serial_data_manipulation.close_port()`
 
 After this initial setup the script should be setup for regular operation.
 
