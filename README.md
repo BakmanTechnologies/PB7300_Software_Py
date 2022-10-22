@@ -117,9 +117,9 @@ Just uncomment one of the main functions and replace the example values with the
 
 
 ## Troubleshooting:
-Due to the nature of serial communication most of the errors encountered during script operation can be attibuted to the comunication speed on the COM port. The COM port settings above MUST be used for proper operation of the PB7300 using the python script. 
+Due to the nature of serial communication most of the errors encountered during script operation can be attributed to the communication speed on the COM port. The COM port settings above MUST be used for proper operation of the PB7300 using the python script. 
 
-In serial_commands_PB7300.py line 28 contains a constant READ_WRITE_DELAY, this can be changed to allow time for the returning bytes to be read if the com port is having speed issues. Small increments should be made as the effect is over the entire com port pipeline. 
+In serial_commands_PB7300.py line 28 contains a constant READ_WRITE_DELAY, this can be changed to allow time for the returning bytes to be read if the com port is having speed issues. Small increments should be made as the effect is over the entire com port pipeline.
 
 These are the errors expected from COM port speed issues.
 
@@ -127,4 +127,4 @@ rx_bytes referenced before assignment.
 
 AttributeError: 'NoneType' object has no attribute 'hex'
 
-There seems to be a component of witchcraft involved in serial communication that I do not possess knowledge of, so please bear that in mind if you have dificulty with this aspect of the code. 
+There seems to be a component of witchcraft involved in serial communication that I do not possess knowledge of, so please bear that in mind if you have difficulty with this aspect of the code. 
