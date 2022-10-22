@@ -1,3 +1,4 @@
+from xmlrpc.client import Boolean
 from serial_commands_PB7300 import SerialCommands
 import time
 from datetime import datetime
@@ -256,7 +257,7 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_disable()
         self.serial_commands_class.lockin_disable()
 
-        utils.simple_graph(time_table, dwell_normalized)
+        utils.simple_dwell_graph(time_table, dwell_normalized)
 
         return time_table, dwell_normalized
 
@@ -350,11 +351,11 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_disable()
         self.serial_commands_class.lockin_disable()
 
-        utils.simple_graph(time_table, first_harmonic_normalized)
+        utils.simple_dwell_graph(time_table, first_harmonic_normalized)
 
         return time_table, first_harmonic_normalized, second_harmonic_normalized
 
-    def scan(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int):
+    def scan(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, only_up: Boolean = False):
         """Scan function, takes start frequency,
         stop frequency, step size and time constant,
         will run from start frequency to stop frequency
@@ -391,7 +392,6 @@ class SerialDataManipulation():
         target_ghz_list = list(range(start_mhz, stop_mhz + 1, step_size_mhz))
 
         for i in range(len(target_ghz_list)):
-            print(i)
             target_ghz_list[i] = target_ghz_list[i]/1000
 
         # Calculates up temps
@@ -463,6 +463,19 @@ class SerialDataManipulation():
 
             time.sleep(time_constant_ms/1000)
 
+        if only_up:
+            self.serial_commands_class.set_LD0_Temperature(25)
+            self.serial_commands_class.set_LD1_Temperature(25)
+            self.serial_commands_class.TEC_disable()
+            self.serial_commands_class.fan_off()
+            self.serial_commands_class.PCS_disable()
+            self.serial_commands_class.laser_bias_disable()
+            self.serial_commands_class.lockin_disable()
+
+            utils.simple_scan_graph(actual_ghz, lockin_1st_normalized)
+
+            return actual_ghz, lockin_1st_normalized
+
         # Down Scan
 
         self.stabilize_initial(ld0_temps_down[-1], ld1_temps_down[-1])
@@ -502,11 +515,11 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_disable()
         self.serial_commands_class.lockin_disable()
 
-        utils.simple_graph(actual_ghz, lockin_1st_normalized)
+        utils.simple_scan_graph(actual_ghz, lockin_1st_normalized)
 
         return actual_ghz, lockin_1st_normalized
 
-    def scan_pm(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, modulation_voltage: float):
+    def scan_pm(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, modulation_voltage: float, only_up: Boolean = False):
         """Scan function, takes start frequency,
         stop frequency, step size, time constant,
         and modulation volatage, will run from start
@@ -622,6 +635,19 @@ class SerialDataManipulation():
             utils.save_to_csv(info, file_name)
 
             time.sleep(time_constant_ms/1000)
+        
+        if only_up:
+            self.serial_commands_class.set_LD0_Temperature(25)
+            self.serial_commands_class.set_LD1_Temperature(25)
+            self.serial_commands_class.TEC_disable()
+            self.serial_commands_class.fan_off()
+            self.serial_commands_class.PCS_disable()
+            self.serial_commands_class.laser_bias_disable()
+            self.serial_commands_class.lockin_disable()
+
+            utils.simple_scan_graph(actual_ghz, lockin_1st_normalized)
+
+            return actual_ghz, lockin_1st_normalized, lockin_2nd_normalized
 
         # Down Scan
 
@@ -664,7 +690,7 @@ class SerialDataManipulation():
         self.serial_commands_class.laser_bias_disable()
         self.serial_commands_class.lockin_disable()
 
-        utils.simple_graph(actual_ghz, lockin_1st_normalized)
+        utils.simple_scan_graph(actual_ghz, lockin_1st_normalized)
 
         return actual_ghz, lockin_1st_normalized, lockin_2nd_normalized
 
@@ -707,10 +733,6 @@ class SerialDataManipulation():
 
         # error_freq_last_ghz previous value is replaced with most recent
         self.error_freq_last_ghz = error_freq_ghz
-
-    def dwell_timer(self):
-        # self.dwell_control()
-        time.sleep(10)
 
     def normalize_lockin_dwell(self, count, lockin_value_1, lockin_value_2):
 
@@ -821,14 +843,7 @@ class SerialDataManipulation():
             print("Start frequency requested: ", start_freq)
             print("Stop frequency requested: ", stop_freq)
 
-    
     def test_commands(self):
-        # print(self.serial_commands_class.read_version())
-        #lockin_1st, t1, t2 = self.serial_commands_class.read_lockin_1st_and_both_temps()
-        #count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
-        #self.normalize_lockin(count, lockin_1st, lockin_2nd)
-        # self.serial_commands_class.read_laser_currents()
-
         self.serial_commands_class.read_version()
 
     def testing_imports(self):

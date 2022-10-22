@@ -115,7 +115,7 @@ def create_dir():
     os.mkdir("data")
 
 
-def simple_graph(x, y):
+def simple_dwell_graph(x, y):
     """Outputs a simple graph at the of a scan or dwell"""
 
     plt.plot(x, y)
@@ -123,13 +123,31 @@ def simple_graph(x, y):
     plt.style.use('fivethirtyeight')
     plt.yscale('log')
 
-    plt.title('Title')
-    plt.xlabel('Time')
-    plt.ylabel('Power')
+    plt.title('PB7300 Dwell')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (arb)')
 
+    plt.xlim(x[0], x[-1])
+    plt.ylim(10e-2, 10e9)
     plt.axis([x[0], x[-1], 10e-2, 10e8])
     plt.show()
 
+def simple_scan_graph(x, y):
+    """Outputs a simple graph at the of a scan or dwell"""
+
+    plt.plot(x, y)
+
+    plt.style.use('fivethirtyeight')
+    plt.yscale('log')
+
+    plt.title('PB7300 Scan')
+    plt.xlabel('Frequency (GHz)')
+    plt.ylabel('Power (arb)')
+
+    plt.xlim(x[0], x[-1])
+    plt.ylim(10e-2, 10e9)
+    plt.axis([x[0], x[-1], 10e-2, 10e8])
+    plt.show()
 
 def create_csv_file(file_name):
     """Creates a file with the scantime at start of dwell"""
