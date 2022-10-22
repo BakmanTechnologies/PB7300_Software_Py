@@ -83,7 +83,7 @@ class SerialCommands:
             print("No values to read")
             print(ex)
             rx_bytes = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-            # sys.exit()
+            self.shutdown()
 
     def close_port(self):
         """Closes com port at end of program"""
@@ -1427,3 +1427,12 @@ class SerialCommands:
     def check_data(self, address):
         value = self.read_eeprom(address)
         return value
+    
+    def shutdown(self):
+        self.set_LD0_Temperature(25)
+        self.set_LD1_Temperature(25)
+        self.TEC_disable()
+        self.fan_off()
+        self.PCS_disable()
+        self.laser_bias_disable()
+        self.lockin_disable()
