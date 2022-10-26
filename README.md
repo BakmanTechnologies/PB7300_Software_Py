@@ -32,6 +32,8 @@ The software will look in /calibration for the factory calibration file, if empt
 
 The software needs this calibration file in order to run. Modifying this file is heavily discouraged as it contains vital information for running the PB7300 Spectrometer. Any change to the values in this file may affect the performance and may even risk damaging the lasers permanently
 
+If at any point the script encounters an error, or the serial communication fails, please turn off the PB7300 THz Spectrometer by switching off the power button and resetting it. This is to prevent any potential damage to the lasers if the remain stuck on a temperature for prolonged periods of time. 
+
 
 ## Setup
 
@@ -119,12 +121,12 @@ Just uncomment one of the main functions and replace the example values with the
 ## Troubleshooting:
 Due to the nature of serial communication most of the errors encountered during script operation can be attributed to the communication speed on the COM port. The COM port settings above MUST be used for proper operation of the PB7300 using the python script. 
 
-In serial_commands_PB7300.py line 28 contains a constant READ_WRITE_DELAY, this can be changed to allow time for the returning bytes to be read if the com port is having speed issues. Small increments should be made as the effect is over the entire com port pipeline.
+In serial_commands_PB7300.py line 28 contains a constant READ_WRITE_DELAY, this can be changed to allow time for the returning bytes to be read if the com port is having speed issues. Small increments should be made as the effect is over the entire com port pipeline. Add 0.005 seconds until communication stabilizes. The higher the wait time the longer the script will take to execute.
 
-These are the errors expected from COM port speed issues.
+These are the errors expected from COM port speed issues, or communication hitched.
 
 rx_bytes referenced before assignment.
 
 AttributeError: 'NoneType' object has no attribute 'hex'
 
-There seems to be a component of witchcraft involved in serial communication that I do not possess knowledge of, so please bear that in mind if you have difficulty with this aspect of the code. 
+There seems to be a component of magic involved in serial communication that I do not possess knowledge of, so please bear that in mind if you have difficulty with this aspect of the code. 
