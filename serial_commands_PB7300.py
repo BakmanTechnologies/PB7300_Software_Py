@@ -21,7 +21,9 @@ class SerialCommands:
     TEMP_SET_SCALING_CONST_L = 936.96
     TEMP_SET_SCALING_CONST_D = 54.08
 
-    CURRENT_REV5 = 160
+    BIAS_SET_SCALE = 96
+
+    BIAS_READ_SCALE = 48
 
     COM_PORT = "COM0"
 
@@ -671,7 +673,7 @@ class SerialCommands:
     def set_LD0_Power(self, set_power):
         """Sets the LD0 power"""
 
-        temp_scaled = int(set_power * self.CURRENT_REV5)
+        temp_scaled = int(set_power * self.BIAS_SET_SCALE)
 
         temp_hex = hex(temp_scaled)
 
@@ -713,14 +715,14 @@ class SerialCommands:
         current_1_lsb_decimal_float = float(current_1_lsb_decimal)
 
         current_1_full_decimal_unscaled = (
-            (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.CURRENT_REV5)
+            (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.BIAS_SET_SCALE)
 
     def set_LD1_Power(self, set_power):
         """Sets the LD1 power"""
 
         #TEST_CURRENT = 100
 
-        temp_scaled = int(set_power * self.CURRENT_REV5)
+        temp_scaled = int(set_power * self.BIAS_SET_SCALE)
 
         temp_hex = hex(temp_scaled)
 
@@ -764,7 +766,7 @@ class SerialCommands:
         current_2_lsb_decimal_float = float(current_2_lsb_decimal)
 
         current_2_full_decimal_unscaled = (
-            (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.CURRENT_REV5)
+            (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.BIAS_SET_SCALE)
 
     # TEC control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1278,7 +1280,7 @@ class SerialCommands:
         if temp_1_full_decimal_unscaled < 32768:
             temp_1_full_decimal_unscaled = 0
 
-        temp_1_full_decimal_scaled = (temp_1_full_decimal_unscaled/80)
+        temp_1_full_decimal_scaled = (temp_1_full_decimal_unscaled/self.BIAS_READ_SCALE)
 
         # laser 2
 
@@ -1296,7 +1298,7 @@ class SerialCommands:
         if temp_2_full_decimal_unscaled < 32768:
             temp_2_full_decimal_unscaled = 0
 
-        temp_2_full_decimal_scaled = (temp_2_full_decimal_unscaled/80)
+        temp_2_full_decimal_scaled = (temp_2_full_decimal_unscaled/self.BIAS_READ_SCALE)
 
     # Lock in time constant ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
