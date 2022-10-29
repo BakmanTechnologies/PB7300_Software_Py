@@ -1,4 +1,3 @@
-from xmlrpc.client import Boolean
 from serial_commands_PB7300 import SerialCommands
 import time
 from datetime import datetime
@@ -355,7 +354,7 @@ class SerialDataManipulation():
 
         return time_table, first_harmonic_normalized, second_harmonic_normalized
 
-    def scan(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, only_up: Boolean = False):
+    def scan(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, only_up: bool = False):
         """Scan function, takes start frequency,
         stop frequency, step size and time constant,
         will run from start frequency to stop frequency
@@ -519,7 +518,7 @@ class SerialDataManipulation():
 
         return actual_ghz, lockin_1st_normalized
 
-    def scan_pm(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, modulation_voltage: float, only_up: Boolean = False):
+    def scan_pm(self, start_freq_ghz: float, stop_freq_ghz: float, step_size_ghz: float, time_constant_ms: int, modulation_voltage: float, only_up: bool = False):
         """Scan function, takes start frequency,
         stop frequency, step size, time constant,
         and modulation volatage, will run from start
