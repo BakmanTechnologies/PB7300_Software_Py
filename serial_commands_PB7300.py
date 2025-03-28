@@ -76,12 +76,20 @@ class SerialCommands:
         # send the characterS to the device
         self.PB7300COMPort.write(tx_bytes)
 
-        time.sleep(0.001)
+        time.sleep(0.01)
+
+        #print("PB7300COMPort.in_waiting: ", self.PB7300COMPort.in_waiting)
+        #input("Press enter")
 
         while self.PB7300COMPort.in_waiting > 0:
+            #print("PB7300COMPort.in_waiting: ", self.PB7300COMPort.in_waiting)
             # Reading Bytes
             rx_bytes = self.PB7300COMPort.read(10)
+            #print("rx_bytes: ", rx_bytes)
+            #input("While Press enter")
+        #print("After a while")
         try:
+            #print("try")
             return rx_bytes
         except UnboundLocalError as ex:
             print("No values to read")
@@ -1125,6 +1133,7 @@ class SerialCommands:
         hex_list.append("00")
 
         tx_bytes = self.build_tx_bytes(hex_list)
+        # print(tx_bytes)
 
         version_bytes = self.write_serial(tx_bytes)
 

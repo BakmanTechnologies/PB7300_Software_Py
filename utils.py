@@ -6,8 +6,8 @@ import csv
 from serial_commands_PB7300 import SerialCommands
 import hashlib
 
-fieldnames_dwell = ["Time", "Power"]
-fieldnames_scan = ["Frequency", "Power"]
+fieldnames_dwell = ["Time", "Power", "Voltage"]
+fieldnames_scan = ["Frequency", "Power", "Voltage"]
 fieldnames_dwellpm = ["Time", "First Harmonic", "Second Harmonic"]
 fieldnames_scanpm = ["Frequency", "First Harmonic", "Second Harmonic"]
 
