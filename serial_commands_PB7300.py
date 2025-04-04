@@ -27,16 +27,27 @@ class SerialCommands:
 
     COM_PORT = "COM0"
 
-    def __init__(self):
+    # Make sure this class is a Singleton
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(SerialCommands, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, com_port=None):
+        self.COM_PORT = com_port
         if self.PB7300COMPort.is_open:
             pass
         else:
-            PORTS = list(ports.comports())
-            print("Ports Available: ")
-            for p in PORTS:
-                print(p)
-            print("PB7300 Python Command Module v0.6")
-            com_select = input("Specify COM port selection: ")
+            if not self.COM_PORT:
+                PORTS = list(ports.comports())
+                print("Ports Available: ")
+                for p in PORTS:
+                    print(p)
+                print("PB7300 Python Command Module v0.6")
+                com_select = input("Specify COM port selection: ")
+            else:
+                com_select = self.COM_PORT
 
             # Opens serial port with set properties
             self.PB7300COMPort.port = com_select
@@ -49,7 +60,7 @@ class SerialCommands:
 
             try:
                 self.PB7300COMPort.open()
-                print("Succeded in opening PB7300 port")
+                print(f"Succeded in opening PB7300 port: {self.COM_PORT}")
             except serial.SerialException as e:
                 print("Failed to open port", e)
 
@@ -76,7 +87,7 @@ class SerialCommands:
         # send the characterS to the device
         self.PB7300COMPort.write(tx_bytes)
 
-        time.sleep(0.015)
+        time.sleep(0.010)
 
         #print("PB7300COMPort.in_waiting: ", self.PB7300COMPort.in_waiting)
         #input("Press enter")
@@ -525,28 +536,30 @@ class SerialCommands:
         lockin_bytes = self.write_serial(tx_bytes)
 
         # Sample count
-
         count_1st_msb = lockin_bytes[2]
-
         count_2nd_msb = lockin_bytes[3]
-
         count_3rd_msb = lockin_bytes[4]
-
         count_lsb = lockin_bytes[5]
 
-        count_full_decimal = (np.int32(count_1st_msb) << 24) | (np.int32(count_2nd_msb) << 16) | (np.int32(count_3rd_msb) << 8) | (np.int32(count_lsb))
+        count_full_decimal = np.int32(
+            (np.int32(count_1st_msb) << 24) |
+            (np.int32(count_2nd_msb) << 16) |
+            (np.int32(count_3rd_msb) << 8) |
+            (np.int32(count_lsb))
+        )
 
         # second lock in
-
         second_lock_in_1st_msb = lockin_bytes[6]
-
         second_lock_in_2nd_msb = lockin_bytes[7]
-
         second_lock_in_3rd_msb = lockin_bytes[8]
-
         second_lock_in_lsb = lockin_bytes[9]
 
-        second_lock_in_full_decimal = (np.int32(second_lock_in_1st_msb) << 24) | (np.int32(second_lock_in_2nd_msb) << 16) | (np.int32(second_lock_in_3rd_msb) << 8) | (np.int32(second_lock_in_lsb))
+        second_lock_in_full_decimal = np.int32(
+            (np.int32(second_lock_in_1st_msb) << 24) |
+            (np.int32(second_lock_in_2nd_msb) << 16) |
+            (np.int32(second_lock_in_3rd_msb) << 8) |
+            (np.int32(second_lock_in_lsb))
+        )
 
         return float(count_full_decimal), float(second_lock_in_full_decimal)
 
