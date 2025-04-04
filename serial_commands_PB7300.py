@@ -76,7 +76,7 @@ class SerialCommands:
         # send the characterS to the device
         self.PB7300COMPort.write(tx_bytes)
 
-        time.sleep(0.01)
+        time.sleep(0.015)
 
         #print("PB7300COMPort.in_waiting: ", self.PB7300COMPort.in_waiting)
         #input("Press enter")
@@ -617,20 +617,17 @@ class SerialCommands:
         hex_list.append("00")
 
         tx_bytes = self.build_tx_bytes(hex_list)
-
         lockin_and_temps_bytes = self.write_serial(tx_bytes)
 
-        split_hex_list = self.convert_hex_and_split_bytes(
-            lockin_and_temps_bytes)
+        split_hex_list = self.convert_hex_and_split_bytes(lockin_and_temps_bytes)
+        # print(split_hex_list)
+        # print(split_hex_list[0])
+        # print(split_hex_list[1])
 
         #Temperature bytes do not require bitwise operations
-
         temp_1_msb_hex = split_hex_list[6]
-
         temp_1_lsb_hex = split_hex_list[7]
-
         temp_2_msb_hex = split_hex_list[8]
-
         temp_2_lsb_hex = split_hex_list[9]
 
         # Bit shifting to obtain lockin value
@@ -643,32 +640,31 @@ class SerialCommands:
             unsigned_list.append(np.uint8(lockin_and_temps_bytes[i]))
 
         # Bit shifting required for processing MSBs and LSBs
-        lock_in_full_decimal_unscaled = (np.int32(unsigned_list[2]) << 24) | (np.int32(unsigned_list[3]) << 16) | (np.int32(unsigned_list[4]) << 8) | (np.int32(unsigned_list[5]))
+        lock_in_full_decimal_unscaled = np.int32(
+            (np.int32(unsigned_list[2]) << 24) |
+            (np.int32(unsigned_list[3]) << 16) |
+            (np.int32(unsigned_list[4]) << 8) |
+            (np.int32(unsigned_list[5]))
+        )
+        # print(lock_in_full_decimal_unscaled)
 
         # Value is scaled by X16 to undo firmware scaling
         lock_in_full_decimal_scaled = float(lock_in_full_decimal_unscaled)*16
+        # print(lock_in_full_decimal_unscaled)
 
         # laser 1
-
         temp_1_msb_decimal = self.convert_hex_to_dec_values(temp_1_msb_hex)
-
         temp_1_msb_decimal_float = float(temp_1_msb_decimal)
-
         temp_1_lsb_decimal = self.convert_hex_to_dec_values(temp_1_lsb_hex)
-
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
             (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
         # laser 2
-
         temp_2_msb_decimal = self.convert_hex_to_dec_values(temp_2_msb_hex)
-
         temp_2_msb_decimal_float = float(temp_2_msb_decimal)
-
         temp_2_lsb_decimal = self.convert_hex_to_dec_values(temp_2_lsb_hex)
-
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
