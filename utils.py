@@ -6,16 +6,13 @@ import csv
 from serial_commands_PB7300 import SerialCommands
 import hashlib
 
-fieldnames_dwell = ["Time", "Power"]
-fieldnames_scan = ["Frequency", "Power"]
+fieldnames_dwell = ["Time", "Power", "Voltage"]
+fieldnames_scan = ["Frequency", "Power", "Voltage"]
 fieldnames_dwellpm = ["Time", "First Harmonic", "Second Harmonic"]
 fieldnames_scanpm = ["Frequency", "First Harmonic", "Second Harmonic"]
 
 
-serial_commands_class = SerialCommands()
-
-
-def read_json_from_file():
+def read_json_from_file(com_port=None):
     """Opens local path floder calibration and sorts them by name"""
     dir_list = os.listdir()
 
@@ -32,13 +29,13 @@ def read_json_from_file():
         recent_file_selection = jsonlist[-1]
 
     if os.path.exists(f"calibration/{recent_file_selection}"):
-        print("File exists.. Opening")
+        print("Calibration File exists.. Opening")
         with open(f"calibration/{recent_file_selection}") as json_file:
             jsondata = json.load(json_file)
 
     else:
         print("No calibration file exists, must read EEPROM")
-        file_name = read_json_from_eeprom()
+        file_name = read_json_from_eeprom(com_port)
         with open(f"calibration/{file_name}.json") as json_file:
             jsondata = json.load(json_file)
 
@@ -47,8 +44,10 @@ def read_json_from_file():
     return cal_data
 
 
-def get_json_string():
+def get_json_string(com_port=None):
     """Obtains string of the JSON calibration file in the EEPROM"""
+
+    serial_commands_class = SerialCommands(com_port)
 
     numlist = []
     string_json = ""
@@ -92,10 +91,10 @@ def save_json_to_file(json_string, SHA1_calculated):
         outfile.write(json_string)
 
 
-def read_json_from_eeprom():
+def read_json_from_eeprom(com_port=None):
     """Reads json from eeprom saves to /calibration, returns SHA1 name of file"""
 
-    json_string = get_json_string()
+    json_string = get_json_string(com_port)
 
     SHA1_from_EEPROM, SHA1_calculated, json_string_cut = sha1_and_string_from_json(json_string)
 

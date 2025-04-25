@@ -11,9 +11,9 @@ class SerialDataManipulation():
     stable_count = 0
     MIN_POWER_VALUE = 0.000001
 
-    def __init__(self, cal_data) -> None:
+    def __init__(self, cal_data, com_port=None) -> None:
         self.cal_data = cal_data
-        self.serial_commands_class = SerialCommands()
+        self.serial_commands_class = SerialCommands(com_port)
 
     def close_port(self):
         self.serial_commands_class.close_port()
@@ -179,6 +179,7 @@ class SerialDataManipulation():
         scantime = time_start_dwell.strftime("%d-%m-%Y_%H-%M-%S")
         start_time = time.time()
         time_table = []
+        dwell_voltage = []
         dwell_normalized = []
         temps_read_ld0 = []
         temps_read_ld1 = []
@@ -211,24 +212,27 @@ class SerialDataManipulation():
         time.sleep(0.02)
         self.serial_commands_class.laser_bias_enable()
 
+        print(f"Time, Freq GHz, Power, Voltage")
         # Loop that keeps dwell active for number in range() temporary solution
         for i in range(number_of_data_points):
             elapsed_time = round((time.time() - start_time), 2)
 
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
 
-            print("Time Stamp: ", elapsed_time)
+            # print(f"Time Stamp: {elapsed_time:5.2f}")
 
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
 
             #print("Lock in sample count: ", count)
 
-            normalize_1, normalize_2 = self.normalize_lockin_dwell(
-                count, lockin_1st, lockin_2nd)
+            normalize_1, normalize_2, voltage_ch1, voltage_ch2 = self.normalize_lockin_dwell(count, lockin_1st, lockin_2nd)
 
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1)
 
+            print(f"{elapsed_time:9.3f},{true_ghz:10.2f},{normalize_1:13.2f},{voltage_ch1:10.2f}")
+
             dwell_normalized.append(normalize_1)
+            dwell_voltage.append(voltage_ch1)
             # temps_read_ld0.append(temp_read_ld0)
             # temps_read_ld1.append(temp_read_ld1)
             time_table.append(elapsed_time)
@@ -241,7 +245,8 @@ class SerialDataManipulation():
 
             # Save to csv
             info = {"Time": time_table[i],
-                    "Power": dwell_normalized[i], }
+                    "Power": dwell_normalized[i],
+                    "Voltage": dwell_voltage[i], }
 
             utils.save_to_csv(info, file_name)
 
@@ -264,6 +269,9 @@ class SerialDataManipulation():
         """Dwell function, takes a target frequency to maintain,
         with a time constant to tell the intrument the speed at which
         it will be polled for data, and the number of data points to take"""
+
+        # todo: voltage is not being stored in this function
+
         if not self.check_ghz_range_limit(target_ghz):
             return None
 
@@ -317,8 +325,7 @@ class SerialDataManipulation():
             print("Time Stamp: ", elapsed_time)
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
             # print("Lock in sample count: ", count)
-            normalize_1, normalize_2 = self.normalize_lockin_dwell(
-                count, lockin_1st, lockin_2nd)
+            normalize_1, normalize_2, voltage_ch1, voltage_ch2 = self.normalize_lockin_dwell(count, lockin_1st, lockin_2nd)
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1)
             first_harmonic_normalized.append(normalize_1)
             second_harmonic_normalized.append(normalize_2)
@@ -372,6 +379,8 @@ class SerialDataManipulation():
         calculated_ghz = []
         lockin_1st_normalized = []
         lockin_2nd_normalized = []
+        voltage_1st_normalized = []
+        voltage_2nd_normalized = []
         temps_read_ld0 = []
         temps_read_ld1 = []
         lockin_1st_list = []
@@ -437,17 +446,22 @@ class SerialDataManipulation():
         self.serial_commands_class.read_lockin_1st_and_both_temps()
         self.serial_commands_class.read_sample_count_second_lockin_output()
 
+        # print(f"target freq GHz,true freq GHz,count,lockin_1st,LD0_T,LD1_T,power,voltage")
+        print(f"target freq GHz,true freq GHz,LD0_T,LD1_T,power,voltage")
         # Up scan
         for j in range(len(target_ghz_list)):
             self.serial_commands_class.set_LD0_Temperature(ld0_temps_up[j])
             self.serial_commands_class.set_LD1_Temperature(ld1_temps_up[j])
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
-            print(f"Target freq: {target_ghz_list[j]}")
+            # print(f"Target freq: {target_ghz_list[j]}")
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
-            normalize_1, normalize_2 = self.normalize_lockin_scan(
-                count, lockin_1st, lockin_2nd)
+            normalize_1, normalize_2, voltage_ch1, voltage_ch2 = self.normalize_lockin_scan(count, lockin_1st, lockin_2nd)
             true_ghz = round(self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1),4)
+
+            print(f"{target_ghz_list[j]:7.2f},{true_ghz:7.2f},{temp_read_ld0:6.2f},{temp_read_ld1:6.2f},{normalize_1:13.2f},{voltage_ch1:10.2f}")
+
             lockin_1st_normalized.append(normalize_1)
+            voltage_1st_normalized.append(voltage_ch1)
             # lockin_2nd_normalized.append(normalize_2)
             # temps_read_ld0.append(temp_read_ld0)
             # temps_read_ld1.append(temp_read_ld1)
@@ -456,7 +470,8 @@ class SerialDataManipulation():
             actual_ghz.append(true_ghz)
 
             info = {"Frequency": actual_ghz[j],
-                    "Power": lockin_1st_normalized[j], }
+                    "Power": lockin_1st_normalized[j],
+                    "Voltage": voltage_1st_normalized[j], }
 
             utils.save_to_csv(info, file_name)
 
@@ -483,23 +498,30 @@ class SerialDataManipulation():
         self.serial_commands_class.read_lockin_1st_and_both_temps()
         self.serial_commands_class.read_sample_count_second_lockin_output()
 
+        # print(f"target freq GHz,true freq GHz,count,lockin_1st,LD0_T,LD1_T,power,voltage")
+        print(f"target freq GHz,true freq GHz,LD0_T,LD1_T,power,voltage")
         for k in reversed(range(len(target_ghz_list))):
             self.serial_commands_class.set_LD0_Temperature(ld0_temps_down[k])
             self.serial_commands_class.set_LD1_Temperature(ld1_temps_down[k])
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
-            print(f"Target freq: {target_ghz_list[k]}")
+            # print(f"Target freq: {target_ghz_list[k]}")
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
-            normalize_1, normalize_2 = self.normalize_lockin_scan(
-                count, lockin_1st, lockin_2nd)
+            normalize_1, normalize_2, voltage_ch1, voltage_ch2 = self.normalize_lockin_scan(count, lockin_1st, lockin_2nd)
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1)
+
+            # print(f"{target_ghz_list[k]},{true_ghz:6.2f},{count},{lockin_1st},{temp_read_ld0:6.2f},{temp_read_ld1:6.2f},{normalize_1:20.2f},{voltage_ch1:15.2f}")
+            print(f"{target_ghz_list[k]:7.2f},{true_ghz:7.2f},{temp_read_ld0:6.2f},{temp_read_ld1:6.2f},{normalize_1:13.2f},{voltage_ch1:10.2f}")
+
             lockin_1st_normalized.append(normalize_1)
+            voltage_1st_normalized.append(voltage_ch1)
             # temps_read_ld0.append(temp_read_ld0)
             # temps_read_ld1.append(temp_read_ld1)
             # count_values.append(count)
             actual_ghz.append(true_ghz)
 
             info = {"Frequency": actual_ghz[-1],
-                    "Power": lockin_1st_normalized[-1], }
+                    "Power": lockin_1st_normalized[-1],
+                    "Voltage": voltage_1st_normalized[-1], }
 
             utils.save_to_csv(info, file_name)
 
@@ -615,8 +637,7 @@ class SerialDataManipulation():
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print(f"Target freq: {target_ghz_list[j]}")
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
-            normalize_1, normalize_2 = self.normalize_lockin_scan(
-                count, lockin_1st, lockin_2nd)
+            normalize_1, normalize_2, voltage_ch1, voltage_ch2 = self.normalize_lockin_scan(count, lockin_1st, lockin_2nd)
             true_ghz = round(self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1),4)
             lockin_1st_normalized.append(normalize_1)
             lockin_2nd_normalized.append(normalize_2)
@@ -662,8 +683,7 @@ class SerialDataManipulation():
             lockin_1st, temp_read_ld0, temp_read_ld1 = self.serial_commands_class.read_lockin_1st_and_both_temps()
             print(f"Target freq: {target_ghz_list[k]}")
             count, lockin_2nd = self.serial_commands_class.read_sample_count_second_lockin_output()
-            normalize_1, normalize_2 = self.normalize_lockin_scan(
-                count, lockin_1st, lockin_2nd)
+            normalize_1, normalize_2, voltage_ch1, voltage_ch2 = self.normalize_lockin_scan(count, lockin_1st, lockin_2nd)
             true_ghz = self.calculate_freq_using_poly(temp_read_ld0, temp_read_ld1)
             lockin_1st_normalized.append(normalize_1)
             lockin_2nd_normalized.append(normalize_2)
@@ -734,34 +754,45 @@ class SerialDataManipulation():
         self.error_freq_last_ghz = error_freq_ghz
 
     def normalize_lockin_dwell(self, count, lockin_value_1, lockin_value_2):
+        # todo: 5 normalize_lockin_dwell and normalize_lockin_scan are seemingly identical, do we need both funcs()?
 
-        data_sample_1st_lockin = (lockin_value_1/count)**2
+        voltage_ch1 = (lockin_value_1/count)
         if lockin_value_2:
-            data_sample_2nd_lockin = ((lockin_value_1/count)**2)
+            voltage_ch2 = (lockin_value_2/count)
         else:
-            data_sample_2nd_lockin = 0
+            voltage_ch2 = 0
 
-        if data_sample_1st_lockin < 1:
-            data_sample_1st_lockin = 1
-        elif data_sample_2nd_lockin < 1:
-            data_sample_2nd_lockin = 1
+        power_ch1 = voltage_ch1**2
+        power_ch2 = voltage_ch2**2
 
-        return data_sample_1st_lockin, data_sample_2nd_lockin
+        if power_ch1 < self.MIN_POWER_VALUE:
+            voltage_ch1 = self.MIN_POWER_VALUE
+            power_ch1 = self.MIN_POWER_VALUE
+        if power_ch2 < self.MIN_POWER_VALUE:
+            voltage_ch2 = self.MIN_POWER_VALUE
+            power_ch2 = self.MIN_POWER_VALUE
+
+        return power_ch1, power_ch2, voltage_ch1, voltage_ch2
 
     def normalize_lockin_scan(self, count, lockin_value_1, lockin_value_2):
 
-        data_sample_1st_lockin = (lockin_value_1/count)**2
+        voltage_ch1 = (lockin_value_1/count)
         if lockin_value_2:
-            data_sample_2nd_lockin = ((lockin_value_1/count)**2)
+            voltage_ch2 = (lockin_value_2/count)
         else:
-            data_sample_2nd_lockin = 0
-        
-        if lockin_value_1 < self.MIN_POWER_VALUE:
-            lockin_value_1 = self.MIN_POWER_VALUE
-        elif lockin_value_2 < self.MIN_POWER_VALUE:
-            lockin_value_2 = self.MIN_POWER_VALUE
-            
-        return data_sample_1st_lockin, data_sample_2nd_lockin
+            voltage_ch2 = 0
+
+        power_ch1 = voltage_ch1**2
+        power_ch2 = voltage_ch2**2
+
+        if power_ch1 < self.MIN_POWER_VALUE:
+            voltage_ch1 = self.MIN_POWER_VALUE
+            power_ch1 = self.MIN_POWER_VALUE
+        if power_ch2 < self.MIN_POWER_VALUE:
+            voltage_ch2 = self.MIN_POWER_VALUE
+            power_ch2 = self.MIN_POWER_VALUE
+
+        return power_ch1, power_ch2, voltage_ch1, voltage_ch2
 
     def stabilize_initial(self, ld0_target_temp, ld1_target_temp):
 
@@ -805,9 +836,9 @@ class SerialDataManipulation():
             current_ld0_temp = actual_ld0_temp
             current_ld1_temp = actual_ld1_temp
             
-            print("Stabilizing Temperatures...")
-            print(ld0_stabilization_count, ld1_stabilization_count)
-            print(actual_ld0_temp, actual_ld1_temp)
+            print(f"Stabilizing Temperatures... Count_ld0: {ld0_stabilization_count:2d}, Count_ld1: {ld1_stabilization_count:2d}, LD0_T: {actual_ld0_temp:5.2f} C, LD1_T: {actual_ld1_temp:5.2f} C")
+            # print(ld0_stabilization_count, ld1_stabilization_count)
+            # print(actual_ld0_temp, actual_ld1_temp)
         
     def simple_stabilize(self, ld0_target_temp, ld1_target_temp):
 
@@ -846,15 +877,16 @@ class SerialDataManipulation():
         self.serial_commands_class.read_version()
 
     def testing_imports(self):
-        print(self.cal_data.LD0.upscan_coef_seg_1[1])
-        print(self.cal_data.LD0.upscan_breakpoint[1])
-        print(self.cal_data.LD0.cal_bias)
-        print(self.cal_data.LD1.cal_bias)
-        print(self.cal_data.zero_cross)
-        print(self.cal_data.L1_minus_L0)
-        print(self.cal_data.gain)
-        print(self.cal_data.stablize_start_fac)
-        print(self.cal_data.stablize_start_cnt)
-        print(self.serial_commands_class.read_version())
+        print(f"Calibration Data:")
+        # print(f"LD0.upscan_coef_seg_1[1]: {self.cal_data.LD0.upscan_coef_seg_1[1]}")
+        # print(f"LD0.upscan_breakpoint[1]: {self.cal_data.LD0.upscan_breakpoint[1]}")
+        print(f"            LD0.cal_bias: {self.cal_data.LD0.cal_bias}")
+        print(f"            LD1.cal_bias: {self.cal_data.LD1.cal_bias}")
+        print(f"              zero_cross: {self.cal_data.zero_cross}")
+        print(f"             L1_minus_L0: {self.cal_data.L1_minus_L0}")
+        print(f"                    gain: {self.cal_data.gain}")
+        print(f"      stablize_start_fac: {self.cal_data.stablize_start_fac}")
+        print(f"      stablize_start_cnt: {self.cal_data.stablize_start_cnt}")
+        #print(self.serial_commands_class.read_version())
 
         

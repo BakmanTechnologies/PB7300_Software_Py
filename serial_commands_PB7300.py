@@ -21,20 +21,33 @@ class SerialCommands:
     TEMP_SET_SCALING_CONST_L = 936.96
     TEMP_SET_SCALING_CONST_D = 54.08
 
-    CURRENT_REV5 = 160
+    BIAS_SET_SCALE = 96
+
+    BIAS_READ_SCALE = 48
 
     COM_PORT = "COM0"
 
-    def __init__(self):
+    # Make sure this class is a Singleton
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(SerialCommands, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self, com_port=None):
+        self.COM_PORT = com_port
         if self.PB7300COMPort.is_open:
             pass
         else:
-            PORTS = list(ports.comports())
-            print("Ports Available: ")
-            for p in PORTS:
-                print(p)
-            print("PB7300 Python Command Module v0.6")
-            com_select = input("Specify COM port selection: ")
+            if not self.COM_PORT:
+                PORTS = list(ports.comports())
+                print("Ports Available: ")
+                for p in PORTS:
+                    print(p)
+                print("PB7300 Python Command Module v0.6")
+                com_select = input("Specify COM port selection: ")
+            else:
+                com_select = self.COM_PORT
 
             # Opens serial port with set properties
             self.PB7300COMPort.port = com_select
@@ -47,7 +60,7 @@ class SerialCommands:
 
             try:
                 self.PB7300COMPort.open()
-                print("Succeded in opening PB7300 port")
+                print(f"Succeded in opening PB7300 port: {self.COM_PORT}")
             except serial.SerialException as e:
                 print("Failed to open port", e)
 
@@ -74,12 +87,20 @@ class SerialCommands:
         # send the characterS to the device
         self.PB7300COMPort.write(tx_bytes)
 
-        time.sleep(0.001)
+        time.sleep(0.010)
+
+        #print("PB7300COMPort.in_waiting: ", self.PB7300COMPort.in_waiting)
+        #input("Press enter")
 
         while self.PB7300COMPort.in_waiting > 0:
+            #print("PB7300COMPort.in_waiting: ", self.PB7300COMPort.in_waiting)
             # Reading Bytes
             rx_bytes = self.PB7300COMPort.read(10)
+            #print("rx_bytes: ", rx_bytes)
+            #input("While Press enter")
+        #print("After a while")
         try:
+            #print("try")
             return rx_bytes
         except UnboundLocalError as ex:
             print("No values to read")
@@ -515,28 +536,30 @@ class SerialCommands:
         lockin_bytes = self.write_serial(tx_bytes)
 
         # Sample count
-
         count_1st_msb = lockin_bytes[2]
-
         count_2nd_msb = lockin_bytes[3]
-
         count_3rd_msb = lockin_bytes[4]
-
         count_lsb = lockin_bytes[5]
 
-        count_full_decimal = (np.int32(count_1st_msb) << 24) | (np.int32(count_2nd_msb) << 16) | (np.int32(count_3rd_msb) << 8) | (np.int32(count_lsb))
+        count_full_decimal = np.int32(
+            (np.int32(count_1st_msb) << 24) |
+            (np.int32(count_2nd_msb) << 16) |
+            (np.int32(count_3rd_msb) << 8) |
+            (np.int32(count_lsb))
+        )
 
         # second lock in
-
         second_lock_in_1st_msb = lockin_bytes[6]
-
         second_lock_in_2nd_msb = lockin_bytes[7]
-
         second_lock_in_3rd_msb = lockin_bytes[8]
-
         second_lock_in_lsb = lockin_bytes[9]
 
-        second_lock_in_full_decimal = (np.int32(second_lock_in_1st_msb) << 24) | (np.int32(second_lock_in_2nd_msb) << 16) | (np.int32(second_lock_in_3rd_msb) << 8) | (np.int32(second_lock_in_lsb))
+        second_lock_in_full_decimal = np.int32(
+            (np.int32(second_lock_in_1st_msb) << 24) |
+            (np.int32(second_lock_in_2nd_msb) << 16) |
+            (np.int32(second_lock_in_3rd_msb) << 8) |
+            (np.int32(second_lock_in_lsb))
+        )
 
         return float(count_full_decimal), float(second_lock_in_full_decimal)
 
@@ -607,20 +630,17 @@ class SerialCommands:
         hex_list.append("00")
 
         tx_bytes = self.build_tx_bytes(hex_list)
-
         lockin_and_temps_bytes = self.write_serial(tx_bytes)
 
-        split_hex_list = self.convert_hex_and_split_bytes(
-            lockin_and_temps_bytes)
+        split_hex_list = self.convert_hex_and_split_bytes(lockin_and_temps_bytes)
+        # print(split_hex_list)
+        # print(split_hex_list[0])
+        # print(split_hex_list[1])
 
         #Temperature bytes do not require bitwise operations
-
         temp_1_msb_hex = split_hex_list[6]
-
         temp_1_lsb_hex = split_hex_list[7]
-
         temp_2_msb_hex = split_hex_list[8]
-
         temp_2_lsb_hex = split_hex_list[9]
 
         # Bit shifting to obtain lockin value
@@ -633,32 +653,31 @@ class SerialCommands:
             unsigned_list.append(np.uint8(lockin_and_temps_bytes[i]))
 
         # Bit shifting required for processing MSBs and LSBs
-        lock_in_full_decimal_unscaled = (np.int32(unsigned_list[2]) << 24) | (np.int32(unsigned_list[3]) << 16) | (np.int32(unsigned_list[4]) << 8) | (np.int32(unsigned_list[5]))
+        lock_in_full_decimal_unscaled = np.int32(
+            (np.int32(unsigned_list[2]) << 24) |
+            (np.int32(unsigned_list[3]) << 16) |
+            (np.int32(unsigned_list[4]) << 8) |
+            (np.int32(unsigned_list[5]))
+        )
+        # print(lock_in_full_decimal_unscaled)
 
         # Value is scaled by X16 to undo firmware scaling
         lock_in_full_decimal_scaled = float(lock_in_full_decimal_unscaled)*16
+        # print(lock_in_full_decimal_unscaled)
 
         # laser 1
-
         temp_1_msb_decimal = self.convert_hex_to_dec_values(temp_1_msb_hex)
-
         temp_1_msb_decimal_float = float(temp_1_msb_decimal)
-
         temp_1_lsb_decimal = self.convert_hex_to_dec_values(temp_1_lsb_hex)
-
         temp_1_lsb_decimal_float = float(temp_1_lsb_decimal)
 
         temp_1_full_decimal_unscaled = (
             (((((2**8) * temp_1_msb_decimal_float)+temp_1_lsb_decimal_float)-self.TEMP_READ_SCALING_CONST_N)) / self.TEMP_READ_SCALING_CONST_C)
 
         # laser 2
-
         temp_2_msb_decimal = self.convert_hex_to_dec_values(temp_2_msb_hex)
-
         temp_2_msb_decimal_float = float(temp_2_msb_decimal)
-
         temp_2_lsb_decimal = self.convert_hex_to_dec_values(temp_2_lsb_hex)
-
         temp_2_lsb_decimal_float = float(temp_2_lsb_decimal)
 
         temp_2_full_decimal_unscaled = (
@@ -671,7 +690,7 @@ class SerialCommands:
     def set_LD0_Power(self, set_power):
         """Sets the LD0 power"""
 
-        temp_scaled = int(set_power * self.CURRENT_REV5)
+        temp_scaled = int(set_power * self.BIAS_SET_SCALE)
 
         temp_hex = hex(temp_scaled)
 
@@ -713,14 +732,14 @@ class SerialCommands:
         current_1_lsb_decimal_float = float(current_1_lsb_decimal)
 
         current_1_full_decimal_unscaled = (
-            (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.CURRENT_REV5)
+            (((2**8) * current_1_msb_decimal_float)+current_1_lsb_decimal_float)/self.BIAS_SET_SCALE)
 
     def set_LD1_Power(self, set_power):
         """Sets the LD1 power"""
 
         #TEST_CURRENT = 100
 
-        temp_scaled = int(set_power * self.CURRENT_REV5)
+        temp_scaled = int(set_power * self.BIAS_SET_SCALE)
 
         temp_hex = hex(temp_scaled)
 
@@ -764,7 +783,7 @@ class SerialCommands:
         current_2_lsb_decimal_float = float(current_2_lsb_decimal)
 
         current_2_full_decimal_unscaled = (
-            (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.CURRENT_REV5)
+            (((2**8) * current_2_msb_decimal_float)+current_2_lsb_decimal_float)/self.BIAS_SET_SCALE)
 
     # TEC control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1123,6 +1142,7 @@ class SerialCommands:
         hex_list.append("00")
 
         tx_bytes = self.build_tx_bytes(hex_list)
+        # print(tx_bytes)
 
         version_bytes = self.write_serial(tx_bytes)
 
@@ -1278,7 +1298,7 @@ class SerialCommands:
         if temp_1_full_decimal_unscaled < 32768:
             temp_1_full_decimal_unscaled = 0
 
-        temp_1_full_decimal_scaled = (temp_1_full_decimal_unscaled/80)
+        temp_1_full_decimal_scaled = (temp_1_full_decimal_unscaled/self.BIAS_READ_SCALE)
 
         # laser 2
 
@@ -1296,7 +1316,7 @@ class SerialCommands:
         if temp_2_full_decimal_unscaled < 32768:
             temp_2_full_decimal_unscaled = 0
 
-        temp_2_full_decimal_scaled = (temp_2_full_decimal_unscaled/80)
+        temp_2_full_decimal_scaled = (temp_2_full_decimal_unscaled/self.BIAS_READ_SCALE)
 
     # Lock in time constant ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
