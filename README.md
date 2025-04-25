@@ -16,8 +16,8 @@ Created for Bakman Technologies by Ricardo Franco
 
 2. Activate virtual environment
 
-  `source env/Scripts/activate` for Windows
-  'source env/bin/activate' for Linux
+  `source env/Scripts/activate` for Windows.
+  `source env/bin/activate` for Linux.
 
 3. Install dependencies
 
